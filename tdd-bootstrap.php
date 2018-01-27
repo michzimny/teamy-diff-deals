@@ -42,8 +42,9 @@ class Protocol {
                 $tricks2 = trim(str_replace('&nbsp;', '', $tr->next_sibling()->find('td[class="bdc"]', 3)->innertext));
 
                 // if is played on both tables of a match
-                if(($tricks1 || $contract1 == 'ARB') 
-                      && ($tricks2 || $contract2 == 'ARB')) {
+                // note that the contract field for arbitral scores starts with 'A' (e.g. 'ARB' or 'AAA')
+                if(($tricks1 || strpos($contract1, 'A') === 0) 
+                      && ($tricks2 || strpos($contract2, 'A') === 0)) {
                     $deal = $this->deals_by_tables[$table];
                     $insert = "<h4>Stół $table &ndash; Rozdanie {$deal->deal_num}</h4>" . $deal->html();
                     $modified = 1;
