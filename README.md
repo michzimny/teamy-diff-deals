@@ -1,10 +1,13 @@
 # teamy-diff-deals
 
-Program umożliwia wyświetlenie w protokole JFR Teamy na stronie wielu rozkładów rozdań, tj. innego rozkładu dla każdego stołu.
+Program umożliwia wyświetlenie w protokole JFR Teamy na stronie wielu rozkładów rozdań, tj. innego rozkładu dla każdego stołu (lub tylko dla wybranych stołów).
+
+Program wyświetla rozkład rozdania przy danym stole, jeśli co najmniej jeden z dwóch zapisów z tego meczu został już wprowadzony (choćby jako zapis częściowy, tj. bez ostatecznej liczby lew).
 
 ## Instalacja
 
 W katalogu z plikami html na serwerze należy umieścić .htaccess oraz pliki PHP.
+Reguła w .htaccess zapewnia, że zapytania do plików HTML z protokołami są przekierowywane do tdd-protocol.php, który podejmuje niezbędne działania.
 
 ## Dodanie rozkładów
 
@@ -34,3 +37,5 @@ nepo1-r1-t3-b1.pbn
 nepo1-r1-t4-b1.pbn
 nepo1-r1-t5-b1.pbn
 ```
+
+W przypadku, gdy w meczu 48-rozdaniowym numeracja rozdań to 1-24 i 1-24, to plik PBN z tymi ostatnimi 24 rozdaniami nazywa się "nepo1-r1-t1-b25.pbn" (pierwsze rozdanie z tego pliku stanowi 25. z kolei rozdanie meczu).
