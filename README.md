@@ -2,7 +2,8 @@
 
 Program umożliwia wyświetlenie w protokole JFR Teamy na stronie wielu rozkładów rozdań, tj. innego rozkładu dla każdego stołu (lub tylko dla wybranych stołów).
 
-Program wyświetla rozkład rozdania przy danym stole, jeśli co najmniej jeden z dwóch zapisów z tego meczu został już wprowadzony (choćby jako zapis częściowy, tj. bez ostatecznej liczby lew).
+Program wyświetla rozkład rozdania przy danym stole, jeśli oba zapisy z tego meczu widnieją już w protokole. 
+Może to być zachowanie niewystarczające, gdy rozkład jest przeznaczony nie tylko dla tego jednego meczu, ale również dla kolejnych, widniejących niżej w protokole.
 
 ## Instalacja
 

@@ -31,17 +31,19 @@ class Protocol {
         $header_tr = $header_td1->parent;
         $tr = @$header_tr->next_sibling();
         while($tr) {
-            $td_score1 = $tr->find('td[class="bdc"]', 0);
-            $score1 = str_replace('&nbsp;', '', $td_score1->innertext);
-            
             $td = $tr->find('td/a', 0);
             $table = trim($td->innertext);
             $table = str_replace('&nbsp;', '', $table);
             $table = (int)$table;
-            if($table && array_key_exists($table, $this->deals_by_tables)) {                
-                // if is played on the 1st table
-                // TODO check both tables of the match
-                if($score1) {
+            if($table && array_key_exists($table, $this->deals_by_tables)) {
+                $contract1 = trim(str_replace('&nbsp;', '', $tr->find('td[class="bdc"]', 0)->innertext));
+                $tricks1 = trim(str_replace('&nbsp;', '', $tr->find('td[class="bdc"]', 3)->innertext));
+                $contract2 = trim(str_replace('&nbsp;', '', $tr->next_sibling()->find('td[class="bdc"]', 0)->innertext));
+                $tricks2 = trim(str_replace('&nbsp;', '', $tr->next_sibling()->find('td[class="bdc"]', 3)->innertext));
+
+                // if is played on both tables of a match
+                if(($tricks1 || $contract1 == 'ARB') 
+                      && ($tricks2 || $contract2 == 'ARB')) {
                     $deal = $this->deals_by_tables[$table];
                     $insert = "<h4>Stół $table &ndash; Rozdanie {$deal->deal_num}</h4>" . $deal->html();
                     $modified = 1;
