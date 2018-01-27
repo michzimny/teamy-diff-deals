@@ -1,0 +1,3 @@
+RewriteEngine On
+RewriteRule ([a-zA-Z0-9]+)(1)b-(\d+)\.html$ tdd-protocol.php?prefix=$1&round=$2&board=$3
+
