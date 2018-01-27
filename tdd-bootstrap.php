@@ -40,6 +40,7 @@ class Protocol {
             $table = (int)$table;
             if($table && array_key_exists($table, $this->deals_by_tables)) {                
                 // if is played on the 1st table
+                // TODO check both tables of the match
                 if($score1) {
                     $deal = $this->deals_by_tables[$table];
                     $insert = "<h4>Stół $table &ndash; Rozdanie {$deal->deal_num}</h4>" . $deal->html();
