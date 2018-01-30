@@ -65,6 +65,15 @@ class Protocol {
             $dom->find('/html/body/table/tr', 0)->outertext = '';
         }
 
+        // replacing meta http-equiv refresh with a javascript refresh to preserve hash in the result page
+        $meta = $head->find('meta');
+        foreach ($meta as $metaTag) {
+            if ($metaTag->hasAttribute('http-equiv') && strtolower($metaTag->getAttribute('http-equiv')) == 'refresh') {
+                $head->innertext = str_replace($metaTag->outertext, '', $head->innertext) . '<script type="text/javascript">setTimeout(function() { location.reload(); }, ' . ($metaTag->getAttribute('content') * 1000) . ');</script>';
+                break;
+            }
+        }
+
         print $dom->outertext;
     }
 
