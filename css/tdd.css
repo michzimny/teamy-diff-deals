@@ -1,0 +1,7 @@
+body > table > tbody > tr {
+    opacity: 0.2
+}
+body > table > tbody > tr.hovered,
+body > table > tbody > tr.specified {
+    opacity: 1.0;
+}

@@ -65,6 +65,9 @@ class Protocol {
             $dom->find('/html/body/table/tr', 0)->outertext = '';
         }
 
+        $head = $dom->find('/html/head', 0);
+        $head->innertext .= '<link rel="stylesheet" type="text/css" href="css/tdd.css" />';
+
         // replacing meta http-equiv refresh with a javascript refresh to preserve hash in the result page
         $meta = $head->find('meta');
         foreach ($meta as $metaTag) {
