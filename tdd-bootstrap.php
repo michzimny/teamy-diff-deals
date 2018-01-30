@@ -66,7 +66,9 @@ class Protocol {
         }
 
         $head = $dom->find('/html/head', 0);
-        $head->innertext .= '<link rel="stylesheet" type="text/css" href="css/tdd.css" />';
+        $head->innertext .= '<link rel="stylesheet" type="text/css" href="css/tdd.css" />'
+            . '<script src="https://code.jquery.com/jquery-3.3.1.min.js" type="text/javascript"></script>'
+            . '<script src="sklady/tdd.js" type="text/javascript"></script>';
 
         // replacing meta http-equiv refresh with a javascript refresh to preserve hash in the result page
         $meta = $head->find('meta');
