@@ -74,7 +74,8 @@ class Protocol {
         $meta = $head->find('meta');
         foreach ($meta as $metaTag) {
             if ($metaTag->hasAttribute('http-equiv') && strtolower($metaTag->getAttribute('http-equiv')) == 'refresh') {
-                $head->innertext = str_replace($metaTag->outertext, '', $head->innertext) . '<script type="text/javascript">setTimeout(function() { location.reload(); }, ' . ($metaTag->getAttribute('content') * 1000) . ');</script>';
+                $head->innertext .= '<script type="text/javascript">setTimeout(function() { location.reload(); }, ' . ($metaTag->getAttribute('content') * 1000) . ');</script>';
+                $metaTag->outertext = '';  // delete $metaTag
                 break;
             }
         }
