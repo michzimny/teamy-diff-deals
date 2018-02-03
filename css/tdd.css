@@ -1,3 +1,7 @@
+body > table > tbody > tr.tdd-header > td {
+    border-bottom: 1px solid #006;
+    padding-top: 30px;
+}
 body > table > tbody > tr {
     opacity: 0.2
 }

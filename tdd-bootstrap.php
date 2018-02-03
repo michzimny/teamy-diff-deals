@@ -53,7 +53,7 @@ class Protocol {
                     $insert .= '<p>...</p>';
                 }
 
-                $tr->outertext = '<tr class="tdd-header"><td colspan="7" style="border-bottom:1px solid #006;padding-top:30px;">' . $insert . '</td></tr>' . $tr->outertext;
+                $tr->outertext = '<tr class="tdd-header"><td colspan="7">' . $insert . '</td></tr>' . $tr->outertext;
             }
             $tr = @$tr->next_sibling();
         }
