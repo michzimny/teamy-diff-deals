@@ -7,7 +7,7 @@ Może to być zachowanie niewystarczające, gdy rozkład jest przeznaczony nie t
 
 ## Instalacja
 
-W katalogu z plikami html na serwerze należy umieścić .htaccess oraz pliki PHP.
+W katalogu z plikami html na serwerze należy umieścić .htaccess oraz pliki PHP, a także w odpowiednich katalogach dodatkowe pliki CSS/JS.
 Reguła w .htaccess zapewnia, że zapytania do plików HTML z protokołami są przekierowywane do tdd-protocol.php, który podejmuje niezbędne działania.
 
 ## Dodanie rozkładów

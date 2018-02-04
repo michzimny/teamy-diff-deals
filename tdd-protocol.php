@@ -18,7 +18,12 @@ if($request_uri_ending != '/' . $html_filename) {
 //
 
 $deals_by_tables = load_deals_for_tables($prefix, $round, $board);
-foreach($deals_by_tables as $table => $deal) {
-    $protocol->set_deal($table, $deal);
+if (count($deals_by_tables) > 0) {
+    foreach($deals_by_tables as $table => $deal) {
+        $protocol->set_deal($table, $deal);
+    }
+    echo $protocol->output();
 }
-echo $protocol->output();
+else {
+    readfile($html_filename);
+}
