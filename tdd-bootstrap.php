@@ -24,7 +24,6 @@ class Protocol {
 
     function output() {
         $content = file_get_contents($this->get_filename());
-        $modified = 0;
 
         $dom = str_get_html($content);
         $header_td1 = $dom->find("/html/body/table/tr/td[class=\"bdcc12\"]", 0);
@@ -48,7 +47,6 @@ class Protocol {
                 if(($score1 !== '' || strpos($contract1, 'A') === 0)
                       && ($score2 !== '' || strpos($contract2, 'A') === 0)) {
                     $insert .= $deal->html();
-                    $modified = 1;
                 } else {
                     $insert .= '<p>...</p>';
                 }
@@ -58,12 +56,10 @@ class Protocol {
             $tr = @$tr->next_sibling();
         }
 
-        if($modified) {
-            $header_tr2 = $header_tr->next_sibling();
-            $header_tr->outertext = '';
-            $header_tr2->outertext = '';
-            $dom->find('/html/body/table/tr', 0)->outertext = '';
-        }
+        $header_tr2 = $header_tr->next_sibling();
+        $header_tr->outertext = '';
+        $header_tr2->outertext = '';
+        $dom->find('/html/body/table/tr', 0)->outertext = '';
 
         $head = $dom->find('/html/head', 0);
         $head->innertext .= '<link rel="stylesheet" type="text/css" href="css/tdd.css" />'
