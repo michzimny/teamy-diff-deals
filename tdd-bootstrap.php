@@ -183,8 +183,13 @@ function load_deals_for_tables($prefix, $round, $board_in_teamy) {
             $file_table = $match[1];
             $file_start_board = $match[2];
 
-            // 1 in teamy -> 1 in pbn; 24 in teamy -> 1 in pbn; 25 in teamy -> 1 in pbn
-            $num_in_pbn = $board_in_teamy - $file_start_board + 1;
+            $first_num_in_pbn = array();
+            preg_match('/\[Board "(\d+)"\]/', file_get_contents($filename), $first_num_in_pbn);
+            $first_num_in_pbn = $first_num_in_pbn ? intval($first_num_in_pbn[1]) : 1;
+
+            // 1 in teamy -> 1 in pbn; 24 in teamy -> 24 in pbn; 25 in teamy -> 1 in pbn
+            // if PBN doesn't starts with Board 1, it's been adjusted
+            $num_in_pbn = $board_in_teamy - $file_start_board + $first_num_in_pbn;
 
             try {
                 $deal = new Deal($filename, $num_in_pbn);
