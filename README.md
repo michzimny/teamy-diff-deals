@@ -40,3 +40,7 @@ nepo1-r1-t5-b1.pbn
 ```
 
 W przypadku, gdy w meczu 48-rozdaniowym numeracja rozdań to 1-24 i 1-24, to plik PBN z tymi ostatnimi 24 rozdaniami nazywa się "nepo1-r1-t1-b25.pbn" (pierwsze rozdanie z tego pliku stanowi 25. z kolei rozdanie meczu).
+
+## Znane problemy
+
+* brak obsługi dwucyfrowych numerów rund - [#1](https://github.com/michzimny/teamy-diff-deals/issues/1)
