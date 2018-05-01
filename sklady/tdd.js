@@ -39,10 +39,14 @@ var TDD = {
         ev.stopPropagation();
     },
 
+    lastRefererNumber: undefined,
     detectReferer: function() {
         var regex = document.referrer.match(/\d+t(\d+)-\d+\.htm/);
         if (regex) {
-            return regex[1];
+            if (regex[1] != TDD.lastRefererNumber) {
+                TDD.lastRefererNumber = regex[1];
+                return regex[1];
+            }
         }
         return undefined;
     },
