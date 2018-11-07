@@ -15,7 +15,7 @@ class Protocol {
     }
 
     function get_filename() {
-        return $this->prefix . $this->round . 'b-' . $this->board . '.html';
+        return '..' . DIRECTORY_SEPARATOR . $this->prefix . $this->round . 'b-' . $this->board . '.html';
     }
 
     function set_deal($table, $deal) {
