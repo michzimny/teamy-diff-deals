@@ -31,27 +31,30 @@ class Protocol {
         $tr = @$header_tr->next_sibling();
         while($tr) {
             $td = $tr->find('td/a', 0);
-            $table = trim($td->innertext);
-            $table = str_replace('&nbsp;', '', $table);
-            $table = (int)$table;
-            if($table && array_key_exists($table, $this->deals_by_tables)) {
-                $contract1 = trim(str_replace('&nbsp;', '', $tr->find('td[class="bdc"]', 0)->innertext));
-                $score1 = trim(str_replace('&nbsp;', '', end($tr->find('td'))->innertext));
-                $contract2 = trim(str_replace('&nbsp;', '', $tr->next_sibling()->find('td[class="bdc"]', 0)->innertext));
-                $score2 = trim(str_replace('&nbsp;', '', end($tr->next_sibling()->find('td'))->innertext));
+            if ($td) {
+                $table = trim($td->innertext);
+                $table = str_replace('&nbsp;', '', $table);
+                $table = (int)$table;
+                if($table && array_key_exists($table, $this->deals_by_tables)) {
+                    $nextTr = $tr->next_sibling();
+                    $contract1 = trim(str_replace('&nbsp;', '', $tr->find('td[class="bdc"]', 0)->innertext));
+                    $score1 = trim(str_replace('&nbsp;', '', $tr->find('td', 6)->innertext));
+                    $contract2 = trim(str_replace('&nbsp;', '', $tr->next_sibling()->find('td[class="bdc"]', 0)->innertext));
+                    $score2 = trim(str_replace('&nbsp;', '', $nextTr->find('td', 5)->innertext));
 
-                $deal = $this->deals_by_tables[$table];
-                $insert = "<a href=\"#table-$table\"><h4 id=\"table-$table\">Stół $table &ndash; Rozdanie {$deal->deal_num}</h4></a>";
-                // if is played on both tables of a match
-                // note that the contract field for arbitral scores starts with 'A' (e.g. 'ARB' or 'AAA')
-                if(($score1 !== '' || strpos($contract1, 'A') === 0)
-                      && ($score2 !== '' || strpos($contract2, 'A') === 0)) {
-                    $insert .= $deal->html();
-                } else {
-                    $insert .= '<p>...</p>';
+                    $deal = $this->deals_by_tables[$table];
+                    $insert = "<a href=\"#table-$table\"><h4 id=\"table-$table\">Stół $table &ndash; Rozdanie {$deal->deal_num}</h4></a>";
+                    // if is played on both tables of a match
+                    // note that the contract field for arbitral scores starts with 'A' (e.g. 'ARB' or 'AAA')
+                    if(($score1 !== '' || strpos($contract1, 'A') === 0)
+                       && ($score2 !== '' || strpos($contract2, 'A') === 0)) {
+                        $insert .= $deal->html();
+                    } else {
+                        $insert .= '<p>...</p>';
+                    }
+
+                    $tr->outertext = '<tr class="tdd-header"><td colspan="' . (count($tr->find('td'))-1) . '">' . $insert . '</td></tr>' . $tr->outertext;
                 }
-
-                $tr->outertext = '<tr class="tdd-header"><td colspan="7">' . $insert . '</td></tr>' . $tr->outertext;
             }
             $tr = @$tr->next_sibling();
         }
