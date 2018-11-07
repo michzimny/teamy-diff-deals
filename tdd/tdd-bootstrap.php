@@ -177,7 +177,7 @@ function load_deals_for_tables($prefix, $round, $board_in_teamy) {
     $deals_by_tables = array();
 
     $prefix = preg_quote($prefix);
-    $filename_regex = "/$prefix-r$round-t(\d+)-b(\d+).pbn/";
+    $filename_regex = "/^$prefix-r$round-t(\d+)-b(\d+).pbn$/";
     foreach(scandir('.') as $filename) {
         if(preg_match($filename_regex, $filename, $match)) {
             $file_table = $match[1];
