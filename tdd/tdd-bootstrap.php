@@ -4,20 +4,24 @@ require_once('tdd-simple-html-dom.php');
 
 class Protocol {
 
+    private static $translations = array();
+
     function __construct($prefix, $round, $board) {
         $this->prefix = $prefix;
         $this->round = $round;
         $this->board = $board;
-        $this->translations = json_decode(file_get_contents('translations.json'), TRUE);
+        if (file_exists('translations.json')) {
+            static::$translations = json_decode(file_get_contents('translations.json'), TRUE);
+        }
         $this->deals_by_tables = array();
         if(!file_exists($this->get_filename())) {
             throw new Exception('file not found: ' . $this->get_filename());
         }
     }
 
-    function __($string) {
-        if (isset($this->translations[$string])) {
-            return $this->translations[$string];
+    static function __($string) {
+        if (isset(static::$translations[$string])) {
+            return static::$translations[$string];
         }
         return $string;
     }
@@ -51,7 +55,7 @@ class Protocol {
                     $score2 = trim(str_replace('&nbsp;', '', $nextTr->find('td', 5)->innertext));
 
                     $deal = $this->deals_by_tables[$table];
-                    $insert = "<a href=\"#table-$table\"><h4 id=\"table-$table\">" . $this->__("Stół") . " $table" . " &ndash; " . $this->__("Rozdanie") . " {$deal->deal_num}</h4></a>";
+                    $insert = "<a href=\"#table-$table\"><h4 id=\"table-$table\">" . static::__("Stół") . " $table" . " &ndash; " . static::__("Rozdanie") . " {$deal->deal_num}</h4></a>";
                     // if is played on both tables of a match
                     // note that the contract field for arbitral scores starts with 'A' (e.g. 'ARB' or 'AAA')
                     if(($score1 !== '' || strpos($contract1, 'A') === 0)

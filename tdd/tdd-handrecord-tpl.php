@@ -11,7 +11,7 @@
     </tr>
     <tr>
         <td><?php echo $this->format_hand(3); ?></td>
-        <td><img src="images/<?php echo ($this->deal_num)%16 ? ($this->deal_num)%16 : 16; ?>.gif" 
+        <td><img src="images/<?php echo ($this->deal_num)%16 ? ($this->deal_num)%16 : 16; ?>.gif"
             alt="<?php echo $this->dealer.'/'.$this->vuln; ?>" /></td>
         <td><?php echo $this->format_hand(1); ?></td>
     </tr>
@@ -22,7 +22,7 @@
     </tr>
     <?php if($this->ability): ?>
     <tr><td colspan="5">
-        <small class="sm">Maksymalna liczba lew:</small>
+        <small class="sm"><?php echo Protocol::__("Maksymalna liczba lew"); ?>:</small>
         <table class="ability" border="0" cellspacing="0" cellpadding="0">
         <tr>
             <td class="an2">&nbsp;</td>
@@ -50,7 +50,7 @@
             <?php echo $this->format_ability(3); ?>
         </tr>
         </table>
-        Minimax: <?php echo $this->format_minimax(); ?>
+        <?php echo Protocol::__("Minimax"); ?>: <?php echo $this->format_minimax(); ?>
     </td></tr>
     <?php endif; ?>
 </table>
