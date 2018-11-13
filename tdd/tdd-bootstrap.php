@@ -38,7 +38,7 @@ class Protocol {
         $content = file_get_contents($this->get_filename());
 
         $dom = str_get_html($content);
-        $header_td1 = $dom->find("/html/body/table/tr/td[class=\"bdcc12\"]", 0);
+        $header_td1 = $dom->find('/html/body/table/tr/td[class="bdcc12"]', 0);
         $header_tr = $header_td1->parent;
         $tr = @$header_tr->next_sibling();
         while($tr) {
@@ -78,8 +78,8 @@ class Protocol {
 
         $head = $dom->find('/html/head', 0);
         $head->innertext .= '<link rel="stylesheet" type="text/css" href="css/tdd.css" />'
-            . '<script src="https://code.jquery.com/jquery-3.3.1.min.js" type="text/javascript"></script>'
-            . '<script src="sklady/tdd.js" type="text/javascript"></script>';
+                          . '<script src="https://code.jquery.com/jquery-3.3.1.min.js" type="text/javascript"></script>'
+                          . '<script src="sklady/tdd.js" type="text/javascript"></script>';
 
         // replacing meta http-equiv refresh with a javascript refresh to preserve hash in the result page
         $meta = $head->find('meta');
