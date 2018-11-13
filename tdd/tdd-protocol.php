@@ -6,6 +6,8 @@ $board = (int)$_GET['board'];
 
 require_once('tdd-bootstrap.php');
 
+refresh_board_database();
+
 $protocol = new Protocol($prefix, $round, $board);
 
 // security check
