@@ -14,7 +14,7 @@ class Protocol {
             static::$translations = json_decode(file_get_contents('translations.json'), TRUE);
         }
         $this->deals_by_tables = array();
-        if(!file_exists($this->get_filename())) {
+        if (!file_exists($this->get_filename())) {
             throw new Exception('file not found: ' . $this->get_filename());
         }
     }
@@ -190,8 +190,9 @@ class Deal {
 define('TIMESTAMP_FILE', '.tdd-timestamps.cache');
 define('RECORDS_FILE', '.tdd-records.cache');
 
-function load_deals_for_tables($prefix, $round, $board_in_teamy) {
-    $db = unserialize(file_get_contents(RECORDS_FILE));
+$board_database = unserialize(file_get_contents(RECORDS_FILE));
+
+function load_deals_for_tables($db, $prefix, $round, $board_in_teamy) {
     if (isset($db[$prefix])) {
         if (isset($db[$prefix][$round])) {
             if (isset($db[$prefix][$round][$board_in_teamy])) {
@@ -214,6 +215,7 @@ function get_files_timestamps($files = array()) {
 }
 
 function compile_record_database($files, $dbFile) {
+    global $board_database;
     $db = array();
     foreach ($files as $filename) {
         $filename = basename($filename);
@@ -263,6 +265,7 @@ function compile_record_database($files, $dbFile) {
         }
     }
     file_put_contents(RECORDS_FILE, serialize($db));
+    $board_database = $db;
 }
 
 function refresh_board_database() {
