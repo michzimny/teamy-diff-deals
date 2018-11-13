@@ -100,13 +100,12 @@ class NoSuchDealNumber extends Exception {
 
 class Deal {
 
-    function __construct($filename, $num_in_pbn) {
+    function __construct($pbnfile, $num_in_pbn) {
         $this->deal_num = $num_in_pbn;
-        $this->_parse($filename, $num_in_pbn);
+        $this->_parse($pbnfile, $num_in_pbn);
     }
 
-    function _parse($filename, $num_in_pbn) {
-        $pbn = file_get_contents($filename);
+    function _parse($pbn, $num_in_pbn) {
         $start = strpos($pbn, '[Board "' . $num_in_pbn . '"]');
         if($start === false) {
             throw new NoSuchDealNumber($num_in_pbn);
@@ -207,7 +206,7 @@ function load_deals_for_tables($prefix, $round, $board_in_teamy) {
             $num_in_pbn = $board_in_teamy - $file_start_board + $first_num_in_pbn;
 
             try {
-                $deal = new Deal($filename, $num_in_pbn);
+                $deal = new Deal(file_get_contents($filename), $num_in_pbn);
                 $deals_by_tables[$file_table] = $deal;
             } catch (NoSuchDealNumber $e) {
                 // ignore if the deal does not exist in the file
