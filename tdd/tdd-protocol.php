@@ -2,8 +2,6 @@
 
 require_once('tdd-bootstrap.php');
 
-refresh_board_database();
-
 // parsing URI parts from full request string
 $uri = explode('b-', basename($_SERVER['REQUEST_URI']));
 if (count($uri) < 2) {
@@ -14,16 +12,16 @@ $board = (int)(array_pop($uri));
 $roundPrefix = implode('b-', $uri);
 
 try {
+    $database = new BoardDB();
     // GET parameters pre-parsed by mod_rewrite are used for HTML fallback
     // in case {$prefix}{$round} combo is not matched against board DB
     $protocol = new Protocol($_GET['prefix'], $_GET['round'], $board);
     $html_filename = $protocol->get_filename();
-    foreach ($board_database as $prefix => $rounds) {
+    foreach ($database->getDB() as $prefix => $rounds) {
         foreach ($rounds as $round => $boards) {
             if ($prefix . $round === $roundPrefix) {
-                $deals_by_tables = load_deals_for_tables($board_database, $prefix, $round, $board);
-                if (count($deals_by_tables) > 0) {
-                    foreach($deals_by_tables as $table => $deal) {
+                if (isset($boards[$board])) {
+                    foreach($boards[$board] as $table => $deal) {
                         $protocol->set_deal($table, $deal);
                     }
                     echo $protocol->output();

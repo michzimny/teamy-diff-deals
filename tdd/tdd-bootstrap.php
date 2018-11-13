@@ -187,94 +187,94 @@ class Deal {
 
 }
 
-define('TIMESTAMP_FILE', '.tdd-timestamps.cache');
-define('RECORDS_FILE', '.tdd-records.cache');
+class BoardDB {
 
-$board_database = unserialize(file_get_contents(RECORDS_FILE));
+    private $__timestampFile = '.tdd-timestamps.cache';
+    private $__dbFile = '.tdd-records.cache';
+    private $__database = array();
 
-function load_deals_for_tables($db, $prefix, $round, $board_in_teamy) {
-    if (isset($db[$prefix])) {
-        if (isset($db[$prefix][$round])) {
-            if (isset($db[$prefix][$round][$board_in_teamy])) {
-                return $db[$prefix][$round][$board_in_teamy];
-            }
-        }
+    public function __construct($timestampFile = '.tdd-timestamps.cache', $dbFile = '.tdd-records.cache') {
+        $this->__timestampFile = $timestampFile;
+        $this->__dbFile = $dbFile;
+        $this->__database = unserialize(file_get_contents($this->__dbFile));
+        $this->refreshBoardDatabase();
     }
-    return array();
-}
 
-function get_record_files($directory = '.') {
-    return glob($directory . DIRECTORY_SEPARATOR . '*.pbn');
-}
+    public function getDB() {
+        return $this->__database;
+    }
 
-function get_files_timestamps($files = array()) {
-    return array_combine(
-        $files,
-        array_map('filemtime', $files)
-    );
-}
+    private function __getRecordFiles($directory = '.') {
+        return glob($directory . DIRECTORY_SEPARATOR . '*.pbn');
+    }
 
-function compile_record_database($files, $dbFile) {
-    global $board_database;
-    $db = array();
-    foreach ($files as $filename) {
-        $filename = basename($filename);
-        $fileParts = array();
-        if (preg_match('/^(.*)-r(\d+)-t(\d+)-b(\d+)\.pbn$/', $filename, $fileParts)) {
-            $prefix = $fileParts[1];
-            if (!isset($db[$prefix])) {
-                $db[$prefix] = array();
-            }
-            $round = (int)($fileParts[2]);
-            if (!isset($db[$prefix][$round])) {
-                $db[$prefix][$round] = array();
-            }
-            $table = (int)($fileParts[3]);
-            $firstBoard = (int)($fileParts[4]);
-            $chunks = preg_split('/(\[Board "(\d+)"\])/', file_get_contents($filename), -1, PREG_SPLIT_DELIM_CAPTURE);
-            $boardHeader = '';
-            $boardNumber = 1;
-            $firstBoardNumber = -1;
-            foreach ($chunks as $chunk) {
-                $chunk = trim($chunk);
-                if (strpos($chunk, '% PBN') > -1) {
-                    continue;
+    private function __getFilesTimestamps($files = array()) {
+        return array_combine(
+            $files,
+            array_map('filemtime', $files)
+        );
+    }
+
+    private function __compileRecordDatabase($files, $dbFile) {
+        $this->__database = array();
+        foreach ($files as $filename) {
+            $filename = basename($filename);
+            $fileParts = array();
+            if (preg_match('/^(.*)-r(\d+)-t(\d+)-b(\d+)\.pbn$/', $filename, $fileParts)) {
+                $prefix = $fileParts[1];
+                if (!isset($this->__database[$prefix])) {
+                    $this->__database[$prefix] = array();
                 }
-                if (strpos($chunk, '[Board ') === 0) {
-                    $boardHeader = $chunk;
-                    continue;
+                $round = (int)($fileParts[2]);
+                if (!isset($this->__database[$prefix][$round])) {
+                    $this->__database[$prefix][$round] = array();
                 }
-                if (strpos($chunk, '[') === 0) {
-                    try {
-                        $deal = new Deal($boardHeader . $chunk, $boardNumber);
-                        $boardNumberJFR = $boardNumber + $firstBoard - $firstBoardNumber;
-                        if (!isset($db[$prefix][$round][$boardNumberJFR])) {
-                            $db[$prefix][$round][$boardNumberJFR] = array();
+                $table = (int)($fileParts[3]);
+                $firstBoard = (int)($fileParts[4]);
+                $chunks = preg_split('/(\[Board "(\d+)"\])/', file_get_contents($filename), -1, PREG_SPLIT_DELIM_CAPTURE);
+                $boardHeader = '';
+                $boardNumber = 1;
+                $firstBoardNumber = -1;
+                foreach ($chunks as $chunk) {
+                    $chunk = trim($chunk);
+                    if (strpos($chunk, '% PBN') > -1) {
+                        continue;
+                    }
+                    if (strpos($chunk, '[Board ') === 0) {
+                        $boardHeader = $chunk;
+                        continue;
+                    }
+                    if (strpos($chunk, '[') === 0) {
+                        try {
+                            $deal = new Deal($boardHeader . $chunk, $boardNumber);
+                            $boardNumberJFR = $boardNumber + $firstBoard - $firstBoardNumber;
+                            if (!isset($this->__database[$prefix][$round][$boardNumberJFR])) {
+                                $this->__database[$prefix][$round][$boardNumberJFR] = array();
+                            }
+                            $this->__database[$prefix][$round][$boardNumberJFR][$table] = $deal;
+                        } catch (NoSuchDealNumber $e) {
+                            // ignore if the deal does not exist in the file
                         }
-                        $db[$prefix][$round][$boardNumberJFR][$table] = $deal;
-                    } catch (NoSuchDealNumber $e) {
-                        // ignore if the deal does not exist in the file
-                    }
-                } else {
-                    $boardNumber = (int)($chunk);
-                    if ($firstBoardNumber < 0) {
-                        $firstBoardNumber = $boardNumber;
+                    } else {
+                        $boardNumber = (int)($chunk);
+                        if ($firstBoardNumber < 0) {
+                            $firstBoardNumber = $boardNumber;
+                        }
                     }
                 }
             }
         }
+        file_put_contents($this->__dbFile, serialize($this->__database));
     }
-    file_put_contents(RECORDS_FILE, serialize($db));
-    $board_database = $db;
-}
 
-function refresh_board_database() {
-    $recordFiles = get_record_files();
-    $savedTimestamps = file_exists(TIMESTAMP_FILE) ? json_decode(file_get_contents('.tdd-timestamps.cache'), TRUE) : array();
-    $timestamps = get_files_timestamps($recordFiles);
+    public function refreshBoardDatabase() {
+        $recordFiles = $this->__getRecordFiles();
+        $savedTimestamps = file_exists($this->__timestampFile) ? json_decode(file_get_contents($this->__timestampFile), TRUE) : array();
+        $timestamps = $this->__getFilesTimestamps($recordFiles);
 
-    if (array_diff_assoc($savedTimestamps, $timestamps) || array_diff_assoc($timestamps, $savedTimestamps)) {
-        compile_record_database($recordFiles, RECORDS_FILE);
-        file_put_contents(TIMESTAMP_FILE, json_encode($timestamps));
+        if (array_diff_assoc($savedTimestamps, $timestamps) || array_diff_assoc($timestamps, $savedTimestamps)) {
+            $this->__compileRecordDatabase($recordFiles, $this->__dbFile);
+            file_put_contents($this->__timestampFile, json_encode($timestamps));
+        }
     }
 }
