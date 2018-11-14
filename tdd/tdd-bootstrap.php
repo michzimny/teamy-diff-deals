@@ -285,7 +285,7 @@ class BoardDB {
         foreach ($files as $filename) {
             $filename = basename($filename);
             $fileParts = array();
-            if (preg_match('/^(.*)-r(\d+)-t(\d+)-b(\d+)\.pbn$/', $filename, $fileParts)) {
+            if (preg_match('/^(.*)-r(\d+)-t([0-9,-]+)-b(\d+)\.pbn$/', $filename, $fileParts)) {
                 $prefix = $fileParts[1];
                 if (!isset($this->__database[$prefix])) {
                     $this->__database[$prefix] = array();
@@ -294,7 +294,18 @@ class BoardDB {
                 if (!isset($this->__database[$prefix][$round])) {
                     $this->__database[$prefix][$round] = array();
                 }
-                $table = (int)($fileParts[3]);
+                $tableString = $fileParts[3];
+                $tables = array();
+                foreach (explode(',', $tableString) as $tableSets) {
+                    $tableDelimiters = array_filter(explode('-', $tableSets));
+                    if (count($tableDelimiters) > 1) {
+                        for ($table = (int)($tableDelimiters[0]); $table <= (int)($tableDelimiters[1]); $table++) {
+                            $tables[] = $table;
+                        }
+                    } else {
+                        $tables[] = (int)($tableDelimiters[0]);
+                    }
+                }
                 $firstBoard = (int)($fileParts[4]);
                 $chunks = preg_split('/(\[Board "(\d+)"\])/', file_get_contents($filename), -1, PREG_SPLIT_DELIM_CAPTURE);
                 $boardHeader = '';
@@ -316,7 +327,9 @@ class BoardDB {
                             if (!isset($this->__database[$prefix][$round][$boardNumberJFR])) {
                                 $this->__database[$prefix][$round][$boardNumberJFR] = array();
                             }
-                            $this->__database[$prefix][$round][$boardNumberJFR][$table] = $deal;
+                            foreach ($tables as $table) {
+                                $this->__database[$prefix][$round][$boardNumberJFR][$table] = $deal;
+                            }
                         } catch (NoSuchDealNumber $e) {
                             // ignore if the deal does not exist in the file
                         }
