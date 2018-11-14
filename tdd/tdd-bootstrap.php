@@ -261,7 +261,9 @@ class BoardDB {
     public function __construct($timestampFile = '.tdd-timestamps.cache', $dbFile = '.tdd-records.cache') {
         $this->__timestampFile = $timestampFile;
         $this->__dbFile = $dbFile;
-        $this->__database = unserialize(file_get_contents($this->__dbFile));
+        if (file_exists($this->__dbFile)) {
+            $this->__database = unserialize(file_get_contents($this->__dbFile));
+        }
         $this->refreshBoardDatabase();
     }
 
