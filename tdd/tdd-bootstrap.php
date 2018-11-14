@@ -34,6 +34,39 @@ class Protocol {
         $this->deals_by_tables[$table] = $deal;
     }
 
+    function findByID($id) {
+        foreach ($this->deals_by_tables as $deal) {
+            if ($deal->id === $id) {
+                return $deal;
+            }
+        }
+        return NULL;
+    }
+
+    function getTablesByID($id) {
+        $tables = array();
+        foreach ($this->deals_by_tables as $table => $deal) {
+            if ($deal->id === $id) {
+                $tables[] = $table;
+            }
+        }
+        return $tables;
+    }
+
+    function areBoardsPlayed($boards) {
+        foreach ($boards as $board) {
+            $dom = str_get_html($board);
+            $isFirstRow = count($dom->find('td/a'));
+            $contract = trim(str_replace('&nbsp;', '', $dom->find('td[class="bdc"]', 0)->innertext));
+            $score = trim(str_replace('&nbsp;', '', $dom->find('td', 5 + $isFirstRow)->innertext));
+            // note that the contract field for arbitral scores starts with 'A' (e.g. 'ARB' or 'AAA')
+            if ($score == '' && $contract[0] != 'A') {
+                return FALSE;
+            }
+        }
+        return TRUE;
+    }
+
     function output() {
         $content = file_get_contents($this->get_filename());
 
@@ -41,40 +74,71 @@ class Protocol {
         $header_td1 = $dom->find('/html/body/table/tr/td[class="bdcc12"]', 0);
         $header_tr = $header_td1->parent;
         $tr = @$header_tr->next_sibling();
-        while($tr) {
+        $columnCount = 0;
+        $groupedBoards = array('default' => array());
+        while ($tr) {
             $td = $tr->find('td/a', 0);
             if ($td) {
+                $columnCount = max($columnCount, count($tr->find('td')));
                 $table = trim($td->innertext);
                 $table = str_replace('&nbsp;', '', $table);
                 $table = (int)$table;
-                if($table && array_key_exists($table, $this->deals_by_tables)) {
-                    $nextTr = $tr->next_sibling();
-                    $contract1 = trim(str_replace('&nbsp;', '', $tr->find('td[class="bdc"]', 0)->innertext));
-                    $score1 = trim(str_replace('&nbsp;', '', $tr->find('td', 6)->innertext));
-                    $contract2 = trim(str_replace('&nbsp;', '', $tr->next_sibling()->find('td[class="bdc"]', 0)->innertext));
-                    $score2 = trim(str_replace('&nbsp;', '', $nextTr->find('td', 5)->innertext));
-
-                    $deal = $this->deals_by_tables[$table];
-                    $insert = "<a href=\"#table-$table\"><h4 id=\"table-$table\">" . static::__("Stół") . " $table" . " &ndash; " . static::__("Rozdanie") . " {$deal->deal_num}</h4></a>";
-                    // if is played on both tables of a match
-                    // note that the contract field for arbitral scores starts with 'A' (e.g. 'ARB' or 'AAA')
-                    if(($score1 !== '' || strpos($contract1, 'A') === 0)
-                       && ($score2 !== '' || strpos($contract2, 'A') === 0)) {
-                        $insert .= $deal->html();
+                if ($table) {
+                    if (array_key_exists($table, $this->deals_by_tables)) {
+                        // add table rows to specific board record
+                        if (!isset($groupedBoards[$this->deals_by_tables[$table]->id])) {
+                            $groupedBoards[$this->deals_by_tables[$table]->id] = array();
+                        }
+                        $groupedBoards[$this->deals_by_tables[$table]->id][] = $tr->outertext;
+                        $groupedBoards[$this->deals_by_tables[$table]->id][] = $tr->next_sibling()->outertext;
+                        $tr->outertext = '';
+                        $tr->next_sibling()->outertext = '';
                     } else {
-                        $insert .= '<p>...</p>';
+                        // add table rows to default board record
+                        $groupedBoards['default'][] = $tr->outertext;
+                        $groupedBoards['default'][] = $tr->next_sibling()->outertext;
                     }
-
-                    $tr->outertext = '<tr class="tdd-header"><td colspan="' . (count($tr->find('td'))-1) . '">' . $insert . '</td></tr>' . $tr->outertext;
                 }
             }
             $tr = @$tr->next_sibling();
         }
 
-        $header_tr2 = $header_tr->next_sibling();
-        $header_tr->outertext = '';
-        $header_tr2->outertext = '';
-        $dom->find('/html/body/table/tr', 0)->outertext = '';
+        $table = $dom->find('/html/body/table', 0);
+        $table->find('tr', 0)->class = 'tdd-header';
+        foreach ($groupedBoards as $boardId => $groupedBoard) {
+            if ($boardId === 'default') {
+                $innerTable = $table->find('td/table', 0);
+                $rows = $innerTable->find('tr');
+                $firstRow = array_shift($rows);
+                $dealNumber = array();
+                if (preg_match('/#(\d+)/', $firstRow->find('h4', 0)->innertext, $dealNumber)) {
+                    $firstRow->innertext = '<td><a href="#table-0"><h4 id="table-0">' . static::__("Rozdanie") . ' ' . $dealNumber[1] . '</h4></a></td>';
+                }
+                if (!$this->areBoardsPlayed($groupedBoard)) {
+                    foreach ($rows as $row) {
+                        $row->outertext = '';
+                    }
+                    $innerTable->innertext = trim($innerTable->innertext) . '<tr><td><p>...</p></td></tr>';
+                }
+            } else {
+                $deal = $this->findByID($boardId);
+                if ($deal) {
+                    $tables = $this->getTablesByID($boardId);
+                    sort($tables);
+                    $insert = '<a href="#table-' . $tables[0] . '"><h4 id="table-' . $tables[0] . '">';
+                    $insert .= static::__("Stół") . ' ' . implode(', ', $tables) . ' &ndash; ';
+                    $insert .= static::__("Rozdanie") . ' ' . $deal->deal_num . '</h4></a>';
+                    // if the board has been played on all tables
+                    if ($this->areBoardsPlayed($groupedBoard)) {
+                        $insert .= $deal->html();
+                    } else {
+                        $insert .= '<p>...</p>';
+                    }
+                    $table->innertext .= '<tr class="tdd-header"><td colspan="' . ($columnCount+1) . '">' . $insert . '</td></tr>';
+                    $table->innertext .= implode('', $groupedBoard);
+                }
+            }
+        }
 
         $head = $dom->find('/html/head', 0);
         $head->innertext .= '<link rel="stylesheet" type="text/css" href="css/tdd.css" />'
@@ -101,6 +165,7 @@ class NoSuchDealNumber extends Exception {
 class Deal {
 
     function __construct($pbnfile, $num_in_pbn) {
+        $this->id = md5($pbnfile);
         $this->deal_num = $num_in_pbn;
         $this->_parse($pbnfile, $num_in_pbn);
     }
