@@ -54,13 +54,16 @@ class Protocol {
     }
 
     function areBoardsPlayed($boards) {
+        if (!$boards) {
+            return FALSE;
+        }
         foreach ($boards as $board) {
             $dom = str_get_html($board);
             $isFirstRow = count($dom->find('td/a'));
             $contract = trim(str_replace('&nbsp;', '', $dom->find('td[class="bdc"]', 0)->innertext));
             $score = trim(str_replace('&nbsp;', '', $dom->find('td', 5 + $isFirstRow)->innertext));
             // note that the contract field for arbitral scores starts with 'A' (e.g. 'ARB' or 'AAA')
-            if ($score == '' && $contract[0] != 'A') {
+            if ($score == '' && (!strlen($contract) || $contract[0] != 'A')) {
                 return FALSE;
             }
         }
