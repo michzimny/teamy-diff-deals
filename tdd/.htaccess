@@ -1,16 +1,6 @@
 <Files tdd-protocol.php>
-    <IfModule !mod_authz_core.c> # Apache 2.2
-        Order allow,deny
-        Allow from all
-    </IfModule>
-    <IfModule mod_authz_core.c>  # Apache 2.4
-        Require all granted
-    </IfModule>
-</Files>
-<IfModule !mod_authz_core.c> # Apache 2.2
     Order allow,deny
-    Deny from all
-</IfModule>
-<IfModule mod_authz_core.c>  # Apache 2.4
-    Require all denied
-</IfModule>
+    Allow from all
+</Files>
+Order allow,deny
+Deny from all
