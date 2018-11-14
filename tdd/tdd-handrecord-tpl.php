@@ -3,7 +3,7 @@
         <td>
             <h4>
                 <?php echo $this->dealer; ?><br>
-                <?php echo $this->vuln; ?>
+                <?php echo Protocol::__($this->vuln); ?>
             </h4>
         </td>
         <td><?php echo $this->format_hand(0); ?></td>
@@ -12,7 +12,7 @@
     <tr>
         <td><?php echo $this->format_hand(3); ?></td>
         <td><img src="images/<?php echo ($this->deal_num)%16 ? ($this->deal_num)%16 : 16; ?>.gif"
-            alt="<?php echo $this->dealer.'/'.$this->vuln; ?>" /></td>
+            alt="<?php echo $this->dealer.'/'.Protocol::__($this->vuln); ?>" /></td>
         <td><?php echo $this->format_hand(1); ?></td>
     </tr>
     <tr>
