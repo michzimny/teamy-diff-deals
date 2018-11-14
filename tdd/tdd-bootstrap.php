@@ -71,6 +71,10 @@ class Protocol {
         $content = file_get_contents($this->get_filename());
 
         $dom = str_get_html($content);
+        if (!count($dom->find('h4'))) {
+            echo $content;
+            return;
+        }
         $header_td1 = $dom->find('/html/body/table/tr/td[class="bdcc12"]', 0);
         $header_tr = $header_td1->parent;
         $tr = @$header_tr->next_sibling();
