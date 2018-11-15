@@ -54,15 +54,17 @@ class Protocol {
     }
 
     function areBoardsPlayed($boards) {
+        // if somehow the default board hand record is not meant to be played on any table, don't reveal it
         if (!$boards) {
             return FALSE;
         }
         foreach ($boards as $board) {
             $dom = str_get_html($board);
+            // score is the 6th cell for some rows, 7th cell for the others, depending if it's open room or closed
             $isFirstRow = count($dom->find('td/a'));
-            $contract = trim(str_replace('&nbsp;', '', $dom->find('td[class="bdc"]', 0)->innertext));
             $score = trim(str_replace('&nbsp;', '', $dom->find('td', 5 + $isFirstRow)->innertext));
-            // note that the contract field for arbitral scores starts with 'A' (e.g. 'ARB' or 'AAA')
+            $contract = trim(str_replace('&nbsp;', '', $dom->find('td[class="bdc"]', 0)->innertext));
+            // contract field for arbitral scores starts with 'A' (e.g. 'ARB' or 'AAA')
             if ($score == '' && (!strlen($contract) || $contract[0] != 'A')) {
                 return FALSE;
             }
@@ -74,6 +76,7 @@ class Protocol {
         $content = file_get_contents($this->get_filename());
 
         $dom = str_get_html($content);
+        // if there's no hand record ("Don't send boards" or a hollow frame), just passthru the original file
         if (!count($dom->find('h4'))) {
             echo $content;
             return;
@@ -86,7 +89,7 @@ class Protocol {
         while ($tr) {
             $td = $tr->find('td/a', 0);
             if ($td) {
-                $columnCount = max($columnCount, count($tr->find('td')));
+                $columnCount = max($columnCount, count($tr->find('td'))); // counting columns to set correct colspan later on
                 $table = trim($td->innertext);
                 $table = str_replace('&nbsp;', '', $table);
                 $table = (int)$table;
@@ -98,6 +101,7 @@ class Protocol {
                         }
                         $groupedBoards[$this->deals_by_tables[$table]->id][] = $tr->outertext;
                         $groupedBoards[$this->deals_by_tables[$table]->id][] = $tr->next_sibling()->outertext;
+                        // remove these rows from the default board record protocol
                         $tr->outertext = '';
                         $tr->next_sibling()->outertext = '';
                     } else {
@@ -111,16 +115,19 @@ class Protocol {
         }
 
         $table = $dom->find('/html/body/table', 0);
-        $table->find('tr', 0)->class = 'tdd-header';
+        $table->find('tr', 0)->class = 'tdd-header'; // marking default header as navigable header for JS
         foreach ($groupedBoards as $boardId => $groupedBoard) {
             if ($boardId === 'default') {
                 $innerTable = $table->find('td/table', 0);
                 $rows = $innerTable->find('tr');
-                $firstRow = array_shift($rows);
+                $firstRow = array_shift($rows); // board record header (with the board number)
                 $dealNumber = array();
+                // replace board number header to make it consistent with other protocols
+                // and mark it as hyperlink hash target
                 if (preg_match('/#(\d+)/', $firstRow->find('h4', 0)->innertext, $dealNumber)) {
                     $firstRow->innertext = '<td><a href="#table-0"><h4 id="table-0">' . static::__("Rozdanie") . ' ' . $dealNumber[1] . '</h4></a></td>';
                 }
+                // remove all other rows (actual layout and DD data) if the default board has not been played on all tables
                 if (!$this->areBoardsPlayed($groupedBoard)) {
                     foreach ($rows as $row) {
                         $row->outertext = '';
@@ -132,6 +139,7 @@ class Protocol {
                 if ($deal) {
                     $tables = $this->getTablesByID($boardId);
                     sort($tables);
+                    // compile header with tables numbers
                     $insert = '<a href="#table-' . $tables[0] . '"><h4 id="table-' . $tables[0] . '">';
                     $insert .= static::__("Stół") . ' ' . implode(', ', $tables) . ' &ndash; ';
                     $insert .= static::__("Rozdanie") . ' ' . $deal->deal_num . '</h4></a>';
@@ -147,6 +155,7 @@ class Protocol {
             }
         }
 
+        // append JS and CSS
         $head = $dom->find('/html/head', 0);
         $head->innertext .= '<link rel="stylesheet" type="text/css" href="css/tdd.css" />'
                           . '<script src="https://code.jquery.com/jquery-3.3.1.min.js" type="text/javascript"></script>'
@@ -172,6 +181,7 @@ class NoSuchDealNumber extends Exception {
 class Deal {
 
     function __construct($pbnfile, $num_in_pbn) {
+        // identify deal by it's hash in case there are duplicate PBN files
         $this->id = md5($pbnfile);
         $this->deal_num = $num_in_pbn;
         $this->_parse($pbnfile, $num_in_pbn);
@@ -283,6 +293,7 @@ class BoardDB {
     }
 
     private function __getFilesTimestamps($files = array()) {
+        // dictionary to keep track of PBN modification files
         return array_combine(
             $files,
             array_map('filemtime', $files)
@@ -295,40 +306,50 @@ class BoardDB {
             $filename = basename($filename);
             $fileParts = array();
             if (preg_match('/^(.*)-r(\d+)-t([0-9,-]+)-b(\d+)\.pbn$/', $filename, $fileParts)) {
+                // tournament prefix
                 $prefix = $fileParts[1];
                 if (!isset($this->__database[$prefix])) {
                     $this->__database[$prefix] = array();
                 }
+                // round number
                 $round = (int)($fileParts[2]);
                 if (!isset($this->__database[$prefix][$round])) {
                     $this->__database[$prefix][$round] = array();
                 }
+                // interpret table numbers from possible ranges
                 $tableString = $fileParts[3];
                 $tables = array();
+                // multiple ranges are separate by a comma
                 foreach (explode(',', $tableString) as $tableSets) {
+                    // each range may be a single value or actual range
                     $tableDelimiters = array_filter(explode('-', $tableSets));
+                    // if it's a range, add every number from that range
                     if (count($tableDelimiters) > 1) {
                         for ($table = (int)($tableDelimiters[0]); $table <= (int)($tableDelimiters[1]); $table++) {
                             $tables[] = $table;
                         }
-                    } else {
+                    } else { // otherwise, add single value
                         $tables[] = (int)($tableDelimiters[0]);
                     }
                 }
                 $firstBoard = (int)($fileParts[4]);
+                // split PBN file to single-board chunks
                 $chunks = preg_split('/(\[Board "(\d+)"\])/', file_get_contents($filename), -1, PREG_SPLIT_DELIM_CAPTURE);
                 $boardHeader = '';
                 $boardNumber = 1;
                 $firstBoardNumber = -1;
                 foreach ($chunks as $chunk) {
                     $chunk = trim($chunk);
+                    // PBN header (first chunk of the file) is ignored
                     if (strpos($chunk, '% PBN') > -1) {
                         continue;
                     }
+                    // current chunk is a delimiter, store it to concatenate to board information
                     if (strpos($chunk, '[Board ') === 0) {
                         $boardHeader = $chunk;
                         continue;
                     }
+                    // current chunk is proper board information
                     if (strpos($chunk, '[') === 0) {
                         try {
                             $deal = new Deal($boardHeader . $chunk, $boardNumber);
@@ -342,8 +363,9 @@ class BoardDB {
                         } catch (NoSuchDealNumber $e) {
                             // ignore if the deal does not exist in the file
                         }
-                    } else {
+                    } else { // we've captured board number, store it until next iteration, when proper board chunk comes
                         $boardNumber = (int)($chunk);
+                        // store first number of the file to calculate proper board number offset
                         if ($firstBoardNumber < 0) {
                             $firstBoardNumber = $boardNumber;
                         }
@@ -359,6 +381,7 @@ class BoardDB {
         $savedTimestamps = file_exists($this->__timestampFile) ? json_decode(file_get_contents($this->__timestampFile), TRUE) : array();
         $timestamps = $this->__getFilesTimestamps($recordFiles);
 
+        // if any of the files changed, regenerate board database
         if (array_diff_assoc($savedTimestamps, $timestamps) || array_diff_assoc($timestamps, $savedTimestamps)) {
             $this->__compileRecordDatabase($recordFiles, $this->__dbFile);
             file_put_contents($this->__timestampFile, json_encode($timestamps));
