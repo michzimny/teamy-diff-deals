@@ -146,7 +146,12 @@ class Protocol {
                     sort($tables);
                     // compile header with tables numbers
                     $insert = '<a href="#table-' . $tables[0] . '"><h4 id="table-' . $tables[0] . '">';
-                    $insert .= static::__("Stół") . ' ' . implode(', ', $tables) . ' &ndash; ';
+                    if (count($tables) <= 5) {
+                        $insert .= static::__("Stół") . ' ' . implode(', ', $tables);
+                    } else {
+                        $insert .= count($tables) . ' ' . static::__("stołów");
+                    }
+                    $insert .= ' &ndash; ';
                     $insert .= static::__("Rozdanie") . ' ' . $deal->deal_num . '</h4></a>';
                     // if the board has been played on all tables
                     if ($this->areBoardsPlayed($groupedBoard)) {
