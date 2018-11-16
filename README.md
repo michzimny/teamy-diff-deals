@@ -10,6 +10,8 @@ Może to być zachowanie niewystarczające, gdy rozkład jest przeznaczony nie t
 W katalogu z plikami html na serwerze należy umieścić .htaccess oraz katalog z plikami PHP (tdd), a także w odpowiednich katalogach dodatkowe pliki CSS/JS.
 Reguła w .htaccess zapewnia, że zapytania do plików HTML z protokołami są przekierowywane do tdd-protocol.php, który podejmuje niezbędne działania.
 
+Skrypt domyślnie obsługuje napisy w języku angielskim. Dla turniejów po polsku należy skasować z katalogu tdd plik `translations.json`.
+
 ## Dodanie rozkładów
 
 W Adminie nie trzeba podpinać do turnieju żadnych rozkładów, ale jeśli jakieś zostaną podpięte, nie trzeba ustawiać osobnych rozkładów dla wszystkich stołów. Wszystkie stoły, dla których nie zdefiniuje się osobnych rozkładów, zostaną wyświetlone bez zmian względem protokołu generowanego przez Admina.
