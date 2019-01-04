@@ -1,0 +1,6 @@
+<Files tdd-protocol.php>
+    Order allow,deny
+    Allow from all
+</Files>
+Order allow,deny
+Deny from all
