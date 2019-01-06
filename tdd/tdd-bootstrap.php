@@ -303,11 +303,14 @@ class BoardDB {
     }
 
     private function __getFilesTimestamps($files = array()) {
-        // dictionary to keep track of PBN modification files
-        return array_combine(
-            $files,
-            array_map('filemtime', $files)
-        );
+        if ($files) {
+            // dictionary to keep track of PBN modification files
+            return array_combine(
+                $files,
+                array_map('filemtime', $files)
+            );
+        }
+        return array();
     }
 
     private function __compileRecordDatabase($files, $dbFile) {
