@@ -6,17 +6,13 @@ if (substr($html_filename, -5) !== '.html') {
     die('This script cannot be called directly!');
 }
 
-const PREFIXES_FILE = '.prefixes';
-
 require_once('tdd-bootstrap.php');
 
 try {
     $database = new BoardDB();
     $prefixes = array_merge(
         array_keys($database->getDB()),
-        file_exists(PREFIXES_FILE) ? array_filter(
-            array_map('trim', explode(PHP_EOL, file_get_contents(PREFIXES_FILE)))
-        ) : array()
+        get_forced_prefixes()
     );
     foreach ($prefixes as $prefix) {
         $uri_match = array();

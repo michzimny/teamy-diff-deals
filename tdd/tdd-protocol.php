@@ -13,11 +13,7 @@ $board = (int)(array_pop($uri));
 // the rest is compiled back to separate prefix from round later on
 $roundPrefix = implode('b-', $uri);
 
-const PREFIXES_FILE = '.prefixes';
-
-$forcedPrefixes = file_exists(PREFIXES_FILE) ? array_filter(
-    array_map('trim', explode(PHP_EOL, file_get_contents(PREFIXES_FILE)))
-) : array();
+$forcedPrefixes = get_forced_prefixes();
 
 try {
     $database = new BoardDB();

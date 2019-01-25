@@ -6,6 +6,14 @@ function filename_from_url($url) {
     return '..' . DIRECTORY_SEPARATOR . $url;
 }
 
+const PREFIXES_FILE = '.prefixes';
+
+function get_forced_prefixes() {
+    return file_exists(PREFIXES_FILE) ? array_filter(
+        array_map('trim', explode(PHP_EOL, file_get_contents(PREFIXES_FILE)))
+    ) : array();
+}
+
 class Protocol {
 
     private static $translations = array();
