@@ -2,13 +2,16 @@
 
 Program umożliwia wyświetlenie w protokole JFR Teamy na stronie wielu rozkładów rozdań, tj. innego rozkładu dla każdego stołu (lub tylko dla wybranych stołów).
 
-Program wyświetla rozkład rozdania przy danym stole, jeśli oba zapisy z tego meczu widnieją już w protokole.
-Może to być zachowanie niewystarczające, gdy rozkład jest przeznaczony nie tylko dla tego jednego meczu, ale również dla kolejnych, widniejących niżej w protokole.
+Program wyświetla rozkład rozdania przy danym stole, jeśli wszystkie zapisy dla danego rozkładu widnieją już w protokole.
+Zapisy ukrywane są również w kontrolkach.
 
 ## Instalacja
 
 W katalogu z plikami html na serwerze należy umieścić .htaccess oraz katalog z plikami PHP (tdd), a także w odpowiednich katalogach dodatkowe pliki CSS/JS.
-Reguła w .htaccess zapewnia, że zapytania do plików HTML z protokołami są przekierowywane do tdd-protocol.php, który podejmuje niezbędne działania.
+Reguły w .htaccess zapewniają, że:
+ * zapytania do plików HTML z protokołami są przekierowywane do tdd-protocol.php,
+ * zapytania do plików HTML z protokołami są przekierowywane do tdd-scoresheet.php
+Skrypty te wykonują odpowiednie operacje.
 
 Skrypt domyślnie obsługuje napisy w języku angielskim. Dla turniejów po polsku należy skasować z katalogu tdd plik `translations.json`.
 
@@ -56,3 +59,5 @@ spo1-r1-t1,4-5-b1.pbn
 ```
 
 lub dwóch albo trzech osobnych plików dla poszczególnych zakresów stołów.
+
+Jeżeli nie zostaną dodane żadne rozkłady dla turnieju - czyli wszystkie stoły turnieju grają tymi samymi rozkładami, uruchomienie skryptu można wymusić, dodając do pliku `tdd/.prefixes` prefiks turnieju - po jednym w nowej linii.
