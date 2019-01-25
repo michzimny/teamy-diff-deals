@@ -208,6 +208,7 @@ class Scoresheet {
         $this->__table = $table;
         $this->__round = $round;
         $this->__content = str_get_dom(file_get_contents($this->get_filename($this->__filename)));
+        $this->__db = (new BoardDB())->getDB();
     }
 
     function get_filename() {
@@ -215,14 +216,13 @@ class Scoresheet {
     }
 
     private function __get_tables_for_board($boardNumber) {
-        $db = (new BoardDB())->getDB();
         $tables = array();
-        if (isset($db[$this->__prefix][$this->__round]) &&
-            isset($db[$this->__prefix][$this->__round][$boardNumber]) &&
-            isset($db[$this->__prefix][$this->__round][$boardNumber][$this->__table])) {
+        if (isset($this->__db[$this->__prefix][$this->__round]) &&
+            isset($this->__db[$this->__prefix][$this->__round][$boardNumber]) &&
+            isset($this->__db[$this->__prefix][$this->__round][$boardNumber][$this->__table])) {
             // check for the same board within other tables
-            foreach ($db[$this->__prefix][$this->__round][$boardNumber] as $table => $board) {
-                if ($board->id == $db[$this->__prefix][$this->__round][$boardNumber][$this->__table]->id) {
+            foreach ($this->__db[$this->__prefix][$this->__round][$boardNumber] as $table => $board) {
+                if ($board->id == $this->__db[$this->__prefix][$this->__round][$boardNumber][$this->__table]->id) {
                     $tables[] = $table;
                 }
             }
