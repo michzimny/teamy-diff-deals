@@ -189,6 +189,98 @@ class Protocol {
 
 }
 
+class Scoresheet {
+
+    private $__filename;
+    private $__table;
+
+    public function __construct($file, $prefix, $table, $round) {
+        $this->__filename = $file;
+        $this->__prefix = $prefix;
+        $this->__table = $table;
+        $this->__round = $round;
+        $this->__content = str_get_dom(file_get_contents($this->get_filename($this->__filename)));
+    }
+
+    function get_filename() {
+        return filename_from_url($this->__filename);
+    }
+
+    private function __get_tables_for_board($boardNumber) {
+        $db = (new BoardDB())->getDB();
+        $tables = array();
+        if (isset($db[$this->__prefix][$this->__round]) &&
+            isset($db[$this->__prefix][$this->__round][$boardNumber]) &&
+            isset($db[$this->__prefix][$this->__round][$boardNumber][$this->__table])) {
+            // check for the same board within other tables
+            foreach ($db[$this->__prefix][$this->__round][$boardNumber] as $table => $board) {
+                if ($board->id == $db[$this->__prefix][$this->__round][$boardNumber][$this->__table]->id) {
+                    $tables[] = $table;
+                }
+            }
+        }
+        return $tables;
+    }
+
+    private function __get_boards_from_tables($protocol, $tables) {
+        $dom = str_get_html(file_get_contents(filename_from_url($protocol)));
+        $header_td1 = $dom->find('/html/body/table/tr/td[class="bdcc12"]', 0);
+        $header_tr = $header_td1->parent;
+        $tr = @$header_tr->next_sibling();
+        $boards = array();
+        while ($tr) {
+            $td = $tr->find('td/a', 0);
+            if ($td) {
+                $table = trim($td->innertext);
+                $table = str_replace('&nbsp;', '', $table);
+                $table = (int)$table;
+                if ($table) {
+                    if (in_array($table, $tables) || !$tables) {
+                        // add table rows to specific board record
+                        $boards[] = $tr->outertext;
+                        $boards[] = $tr->next_sibling()->outertext;
+                    }
+                }
+            }
+            $tr = @$tr->next_sibling();
+        }
+        return $boards;
+    }
+
+    public function is_played($row, $link) {
+        $boardNumber = intval(substr(explode('-', $link->href)[1], 0, -4));
+        $tables = $this->__get_tables_for_board($boardNumber);
+        $boardRows = $this->__get_boards_from_tables($link->href, $tables);
+        return Protocol::areBoardsPlayed($boardRows);
+    }
+
+    public function hide_results($row) {
+        $hideColumns = array(0, 1, 2, 3, 4, 6, 7, 8, 9, 10); // columns to hide - all but board number and scores
+        $cells = $row->find('td');
+		$col = -1;
+		foreach ($cells as $cell) {
+			$col++;
+			if (in_array($col, $hideColumns)) {
+				$cell->innertext = '&nbsp;';
+			}
+		}
+    }
+
+    public function output() {
+        foreach ($this->__content->find('tr a.zb[target=popra]') as $link) {
+            $row = $link;
+            while ($row->tag != 'tr') {
+                $row = $row->parent;
+            }
+            if (!$this->is_played($row, $link)) {
+                $this->hide_results($row);
+            }
+        }
+        print $this->__content->outertext;
+    }
+
+}
+
 class NoSuchDealNumber extends Exception {
 }
 
