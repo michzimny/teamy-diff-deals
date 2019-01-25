@@ -1,19 +1,21 @@
 <?php
 
-require_once('tdd-bootstrap.php');
-
 $html_filename = basename($_SERVER['REQUEST_URI']);
 // if ".html" is not found at the end of the string, it's a direct call, all mod_rewrite requests do have it
 if (substr($html_filename, -5) !== '.html') {
     die('This script cannot be called directly!');
 }
 
+const PREFIXES_FILE = '.prefixes';
+
+require_once('tdd-bootstrap.php');
+
 try {
     $database = new BoardDB();
     $prefixes = array_merge(
         array_keys($database->getDB()),
-        file_exists('.prefixes') ? array_filter(
-            array_map('trim', explode(PHP_EOL, file_get_contents('.prefixes')))
+        file_exists(PREFIXES_FILE) ? array_filter(
+            array_map('trim', explode(PHP_EOL, file_get_contents(PREFIXES_FILE)))
         ) : array()
     );
     foreach ($prefixes as $prefix) {
