@@ -13,6 +13,12 @@ $board = (int)(array_pop($uri));
 // the rest is compiled back to separate prefix from round later on
 $roundPrefix = implode('b-', $uri);
 
+const PREFIXES_FILE = '.prefixes';
+
+$forcedPrefixes = file_exists(PREFIXES_FILE) ? array_filter(
+    array_map('trim', explode(PHP_EOL, file_get_contents(PREFIXES_FILE)))
+) : array();
+
 try {
     $database = new BoardDB();
     // GET parameters pre-parsed by mod_rewrite are used for HTML fallback
@@ -22,7 +28,7 @@ try {
     foreach ($database->getDB() as $prefix => $rounds) {
         foreach ($rounds as $round => $boards) {
             // matching each prefix and round in DB to URI
-            if ($prefix . $round === $roundPrefix) {
+            if (($prefix . $round === $roundPrefix)) {
                 if (isset($boards[$board])) {
                     foreach($boards[$board] as $table => $deal) {
                         $protocol->set_deal($table, $deal);
@@ -31,6 +37,12 @@ try {
                     exit(0);
                 }
             }
+        }
+    }
+    foreach ($forcedPrefixes as $prefix) {
+        if (substr($roundPrefix, 0, strlen($prefix)) === $prefix) {
+            echo $protocol->output();
+            exit(0);
         }
     }
     // here's the fallback
