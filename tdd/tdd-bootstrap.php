@@ -2,6 +2,10 @@
 
 require_once('tdd-simple-html-dom.php');
 
+function filename_from_url($url) {
+    return '..' . DIRECTORY_SEPARATOR . $url;
+}
+
 class Protocol {
 
     private static $translations = array();
@@ -27,7 +31,7 @@ class Protocol {
     }
 
     function get_filename() {
-        return '..' . DIRECTORY_SEPARATOR . $this->prefix . $this->round . 'b-' . $this->board . '.html';
+        return filename_from_url($this->prefix . $this->round . 'b-' . $this->board . '.html');
     }
 
     function set_deal($table, $deal) {
@@ -53,7 +57,7 @@ class Protocol {
         return $tables;
     }
 
-    function areBoardsPlayed($boards) {
+    public static function areBoardsPlayed($boards) {
         // if somehow the default board hand record is not meant to be played on any table, don't reveal it
         if (!$boards) {
             return FALSE;
@@ -133,7 +137,7 @@ class Protocol {
                     $firstRow->innertext = '<td><a href="#table-0"><h4 id="table-0">' . static::__("Rozdanie") . ' ' . $dealNumber[1] . '</h4></a></td>';
                 }
                 // remove all other rows (actual layout and DD data) if the default board has not been played on all tables
-                if (!$this->areBoardsPlayed($groupedBoard)) {
+                if (!self::areBoardsPlayed($groupedBoard)) {
                     foreach ($rows as $row) {
                         $row->outertext = '';
                     }
@@ -154,7 +158,7 @@ class Protocol {
                     $insert .= ' &ndash; ';
                     $insert .= static::__("Rozdanie") . ' ' . $deal->deal_num . '</h4></a>';
                     // if the board has been played on all tables
-                    if ($this->areBoardsPlayed($groupedBoard)) {
+                    if (self::areBoardsPlayed($groupedBoard)) {
                         $insert .= $deal->html();
                     } else {
                         $insert .= '<p>...</p>';
