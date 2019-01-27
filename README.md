@@ -2,7 +2,7 @@
 
 Program umożliwia wyświetlenie w protokole JFR Teamy na stronie wielu rozkładów rozdań, tj. innego rozkładu dla każdego stołu (lub tylko dla wybranych stołów).
 
-Program wyświetla rozkład rozdania przy danym stole, jeśli wszystkie zapisy dla danego rozkładu widnieją już w protokole.
+Program posiada również funkcjonalność ukrywania rozkładów i wyników rozdania, jeśli wszystkie zapisy dla danego rozkładu nie widnieją jeszcze w protokole.
 Zapisy ukrywane są również w kontrolkach.
 
 ## Instalacja
@@ -60,4 +60,10 @@ spo1-r1-t1,4-5-b1.pbn
 
 lub dwóch albo trzech osobnych plików dla poszczególnych zakresów stołów.
 
-Jeżeli nie zostaną dodane żadne rozkłady dla turnieju - czyli wszystkie stoły turnieju grają tymi samymi rozkładami, uruchomienie skryptu można wymusić, dodając do pliku `tdd/.prefixes` prefiks turnieju - po jednym w nowej linii.
+## Ukrywacz wyników
+
+Ukrywacz zostaje włączony dla wszystkich turniejów, których prefiksy są obecne w pliku `tdd/.ukrywacz`.
+
+Ukrywacz działa również dla prefiksów, dla których nie definiuje się różnych rozkładów dla różnych stołów - pod warunkiem umieszczenia ich w pliku `tdd/.ukrywacz`.
+
+Ukrywacz **nie działa** dla żadnego prefiksu nieobecnego w `tdd/.ukrywacz` - nawet jeśli dla prefiksu zdefiniowano różne rozkłady przy różnych stołach.

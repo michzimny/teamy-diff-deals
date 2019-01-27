@@ -10,9 +10,10 @@ require_once('tdd-bootstrap.php');
 
 try {
     $database = new BoardDB();
+    $hidePrefixes = get_hide_prefixes();
     $prefixes = array_merge(
         array_keys($database->getDB()),
-        get_forced_prefixes()
+        $hidePrefixes
     );
     foreach ($prefixes as $prefix) {
         $uri_match = array();
@@ -20,7 +21,7 @@ try {
             $round = intval($uri_match[2]);
             $table = intval($uri_match[3]);
             $segment = intval($uri_match[4]);
-            $scoresheet = new Scoresheet($html_filename, $prefix, $table, $round);
+            $scoresheet = new Scoresheet($html_filename, $prefix, $table, $round, in_array($prefix, $hidePrefixes));
             $scoresheet->output();
             exit(0);
         }

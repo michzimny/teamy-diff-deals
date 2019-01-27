@@ -6,9 +6,9 @@ function filename_from_url($url) {
     return '..' . DIRECTORY_SEPARATOR . $url;
 }
 
-const PREFIXES_FILE = '.prefixes';
+const PREFIXES_FILE = '.ukrywacz';
 
-function get_forced_prefixes() {
+function get_hide_prefixes() {
     return file_exists(PREFIXES_FILE) ? array_filter(
         array_map('trim', explode(PHP_EOL, file_get_contents(PREFIXES_FILE)))
     ) : array();
@@ -17,6 +17,7 @@ function get_forced_prefixes() {
 class Protocol {
 
     private static $translations = array();
+    private $__hideResults = FALSE;
 
     function __construct($prefix, $round, $board) {
         $this->prefix = $prefix;
@@ -46,6 +47,10 @@ class Protocol {
         $this->deals_by_tables[$table] = $deal;
     }
 
+    function set_hide_results($value) {
+        $this->__hideResults = $value;
+    }
+
     function findByID($id) {
         foreach ($this->deals_by_tables as $deal) {
             if ($deal->id === $id) {
@@ -63,6 +68,14 @@ class Protocol {
             }
         }
         return $tables;
+    }
+
+    private function __played($boards) {
+        // don't hide results if it's not explicitly enabled
+        if (!$this->__hideResults) {
+            return TRUE;
+        }
+        return self::areBoardsPlayed($boards);
     }
 
     public static function areBoardsPlayed($boards) {
@@ -196,7 +209,7 @@ class Protocol {
                     $insert .= ' &ndash; ';
                     $insert .= static::__("Rozdanie") . ' ' . $deal->deal_num . '</h4></a>';
                     // if the board has been played on all tables
-                    if (self::areBoardsPlayed($groupedBoard)) {
+                    if ($this->__played($groupedBoard)) {
                         $insert .= $deal->html();
                     } else {
                         $insert .= '<p>...</p>';
@@ -233,13 +246,14 @@ class Scoresheet {
     private $__filename;
     private $__table;
 
-    public function __construct($file, $prefix, $table, $round) {
+    public function __construct($file, $prefix, $table, $round, $hide) {
         $this->__filename = $file;
         $this->__prefix = $prefix;
         $this->__table = $table;
         $this->__round = $round;
         $this->__content = str_get_dom(file_get_contents($this->get_filename($this->__filename)));
         $this->__db = (new BoardDB())->getDB();
+        $this->__hide = $hide;
     }
 
     function get_filename() {
@@ -287,6 +301,9 @@ class Scoresheet {
     }
 
     public function is_played($row, $link) {
+        if (!$this->__hide) {
+            return TRUE;
+        }
         $boardNumber = intval(substr(explode('-', $link->href)[1], 0, -4));
         $tables = $this->__get_tables_for_board($boardNumber);
         $boardRows = $this->__get_boards_from_tables($link->href, $tables);
