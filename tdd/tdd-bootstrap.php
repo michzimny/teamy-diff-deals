@@ -84,6 +84,19 @@ class Protocol {
         return TRUE;
     }
 
+    private function __hide_results($boards) {
+        foreach ($boards as &$board) {
+            $row = str_get_html($board);
+            $cells = $row->find('td.bdc, td.zeo');
+            foreach ($cells as $cell) {
+                $cell->innertext = '&nbsp;';
+            }
+            $board = $row->outertext;
+        }
+        unset($board);
+        return $boards;
+    }
+
     function output() {
         $content = file_get_contents($this->get_filename());
 
@@ -113,14 +126,14 @@ class Protocol {
                         }
                         $groupedBoards[$this->deals_by_tables[$table]->id][] = $tr->outertext;
                         $groupedBoards[$this->deals_by_tables[$table]->id][] = $tr->next_sibling()->outertext;
-                        // remove these rows from the default board record protocol
-                        $tr->outertext = '';
-                        $tr->next_sibling()->outertext = '';
                     } else {
                         // add table rows to default board record
                         $groupedBoards['default'][] = $tr->outertext;
                         $groupedBoards['default'][] = $tr->next_sibling()->outertext;
                     }
+                    // remove these rows from the default board record protocol
+                    $tr->outertext = '';
+                    $tr->next_sibling()->outertext = '';
                 }
             }
             $tr = @$tr->next_sibling();
@@ -144,12 +157,29 @@ class Protocol {
                 if (preg_match('/#(\d+)/', $firstRow->find('h4', 0)->innertext, $dealNumber)) {
                     $firstRow->innertext = '<td><a href="#table-0"><h4 id="table-0">' . static::__("Rozdanie") . ' ' . $dealNumber[1] . '</h4></a></td>';
                 }
+                $played = $this->__played($groupedBoard);
                 // remove all other rows (actual layout and DD data) if the default board has not been played on all tables
-                if (!self::areBoardsPlayed($groupedBoard)) {
+                if (!$played) {
                     foreach ($rows as $row) {
                         $row->outertext = '';
                     }
                     $innerTable->innertext = trim($innerTable->innertext) . '<tr><td><p>...</p></td></tr>';
+                    $groupedBoard = $this->__hide_results($groupedBoard);
+                }
+                $startTable = '';
+                $endTable = '';
+                foreach ($table->find('tr') as $row) {
+                    if ($row->parent == $table) {
+                        if ($row->class == 'tdd-header' || substr($row->find('td')[0]->class, 0, 4) == 'bdcc') {
+                            $startTable .= $row->outertext;
+                        } else {
+                            $endTable .= $row->outertext;
+                        }
+                    }
+                }
+                $table->innertext = $startTable . implode('', $groupedBoard);
+                if ($played) {
+                    $table->innertext .= $endTable;
                 }
             } else {
                 $deal = $this->findByID($boardId);
@@ -170,6 +200,7 @@ class Protocol {
                         $insert .= $deal->html();
                     } else {
                         $insert .= '<p>...</p>';
+                        $groupedBoard = $this->__hide_results($groupedBoard);
                     }
                     $table->innertext .= '<tr class="tdd-header"><td colspan="' . ($columnCount+1) . '">' . $insert . '</td></tr>';
                     $table->innertext .= implode('', $groupedBoard);
