@@ -2,5 +2,9 @@
     Order allow,deny
     Allow from all
 </Files>
+<Files tdd-scoresheet.php>
+    Order allow,deny
+    Allow from all
+</Files>
 Order allow,deny
 Deny from all

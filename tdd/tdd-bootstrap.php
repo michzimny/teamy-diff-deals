@@ -2,9 +2,22 @@
 
 require_once('tdd-simple-html-dom.php');
 
+function filename_from_url($url) {
+    return '..' . DIRECTORY_SEPARATOR . $url;
+}
+
+const PREFIXES_FILE = '.ukrywacz';
+
+function get_hide_prefixes() {
+    return file_exists(PREFIXES_FILE) ? array_filter(
+        array_map('trim', explode(PHP_EOL, file_get_contents(PREFIXES_FILE)))
+    ) : array();
+}
+
 class Protocol {
 
     private static $translations = array();
+    private $__hideResults = FALSE;
 
     function __construct($prefix, $round, $board) {
         $this->prefix = $prefix;
@@ -27,11 +40,15 @@ class Protocol {
     }
 
     function get_filename() {
-        return '..' . DIRECTORY_SEPARATOR . $this->prefix . $this->round . 'b-' . $this->board . '.html';
+        return filename_from_url($this->prefix . $this->round . 'b-' . $this->board . '.html');
     }
 
     function set_deal($table, $deal) {
         $this->deals_by_tables[$table] = $deal;
+    }
+
+    function set_hide_results($value) {
+        $this->__hideResults = $value;
     }
 
     function findByID($id) {
@@ -53,7 +70,15 @@ class Protocol {
         return $tables;
     }
 
-    function areBoardsPlayed($boards) {
+    private function __played($boards) {
+        // don't hide results if it's not explicitly enabled
+        if (!$this->__hideResults) {
+            return TRUE;
+        }
+        return self::areBoardsPlayed($boards);
+    }
+
+    public static function areBoardsPlayed($boards) {
         // if somehow the default board hand record is not meant to be played on any table, don't reveal it
         if (!$boards) {
             return FALSE;
@@ -70,6 +95,19 @@ class Protocol {
             }
         }
         return TRUE;
+    }
+
+    private function __hide_results($boards) {
+        foreach ($boards as &$board) {
+            $row = str_get_html($board);
+            $cells = $row->find('td.bdc, td.zeo');
+            foreach ($cells as $cell) {
+                $cell->innertext = '&nbsp;';
+            }
+            $board = $row->outertext;
+        }
+        unset($board);
+        return $boards;
     }
 
     function output() {
@@ -101,14 +139,14 @@ class Protocol {
                         }
                         $groupedBoards[$this->deals_by_tables[$table]->id][] = $tr->outertext;
                         $groupedBoards[$this->deals_by_tables[$table]->id][] = $tr->next_sibling()->outertext;
-                        // remove these rows from the default board record protocol
-                        $tr->outertext = '';
-                        $tr->next_sibling()->outertext = '';
                     } else {
                         // add table rows to default board record
                         $groupedBoards['default'][] = $tr->outertext;
                         $groupedBoards['default'][] = $tr->next_sibling()->outertext;
                     }
+                    // remove these rows from the default board record protocol
+                    $tr->outertext = '';
+                    $tr->next_sibling()->outertext = '';
                 }
             }
             $tr = @$tr->next_sibling();
@@ -132,12 +170,29 @@ class Protocol {
                 if (preg_match('/#(\d+)/', $firstRow->find('h4', 0)->innertext, $dealNumber)) {
                     $firstRow->innertext = '<td><a href="#table-0"><h4 id="table-0">' . static::__("Rozdanie") . ' ' . $dealNumber[1] . '</h4></a></td>';
                 }
+                $played = $this->__played($groupedBoard);
                 // remove all other rows (actual layout and DD data) if the default board has not been played on all tables
-                if (!$this->areBoardsPlayed($groupedBoard)) {
+                if (!$played) {
                     foreach ($rows as $row) {
                         $row->outertext = '';
                     }
                     $innerTable->innertext = trim($innerTable->innertext) . '<tr><td><p>...</p></td></tr>';
+                    $groupedBoard = $this->__hide_results($groupedBoard);
+                }
+                $startTable = '';
+                $endTable = '';
+                foreach ($table->find('tr') as $row) {
+                    if ($row->parent == $table) {
+                        if ($row->class == 'tdd-header' || substr($row->find('td')[0]->class, 0, 4) == 'bdcc') {
+                            $startTable .= $row->outertext;
+                        } else {
+                            $endTable .= $row->outertext;
+                        }
+                    }
+                }
+                $table->innertext = $startTable . implode('', $groupedBoard);
+                if ($played) {
+                    $table->innertext .= $endTable;
                 }
             } else {
                 $deal = $this->findByID($boardId);
@@ -154,10 +209,11 @@ class Protocol {
                     $insert .= ' &ndash; ';
                     $insert .= static::__("Rozdanie") . ' ' . $deal->deal_num . '</h4></a>';
                     // if the board has been played on all tables
-                    if ($this->areBoardsPlayed($groupedBoard)) {
+                    if ($this->__played($groupedBoard)) {
                         $insert .= $deal->html();
                     } else {
                         $insert .= '<p>...</p>';
+                        $groupedBoard = $this->__hide_results($groupedBoard);
                     }
                     $table->innertext .= '<tr class="tdd-header"><td colspan="' . ($columnCount+1) . '">' . $insert . '</td></tr>';
                     $table->innertext .= implode('', $groupedBoard);
@@ -181,6 +237,102 @@ class Protocol {
         }
 
         print $dom->outertext;
+    }
+
+}
+
+class Scoresheet {
+
+    private $__filename;
+    private $__table;
+
+    public function __construct($file, $prefix, $table, $round, $hide) {
+        $this->__filename = $file;
+        $this->__prefix = $prefix;
+        $this->__table = $table;
+        $this->__round = $round;
+        $this->__content = str_get_dom(file_get_contents($this->get_filename($this->__filename)));
+        $this->__db = (new BoardDB())->getDB();
+        $this->__hide = $hide;
+    }
+
+    function get_filename() {
+        return filename_from_url($this->__filename);
+    }
+
+    private function __get_tables_for_board($boardNumber) {
+        $tables = array();
+        if (isset($this->__db[$this->__prefix][$this->__round]) &&
+            isset($this->__db[$this->__prefix][$this->__round][$boardNumber]) &&
+            isset($this->__db[$this->__prefix][$this->__round][$boardNumber][$this->__table])) {
+            // check for the same board within other tables
+            foreach ($this->__db[$this->__prefix][$this->__round][$boardNumber] as $table => $board) {
+                if ($board->id == $this->__db[$this->__prefix][$this->__round][$boardNumber][$this->__table]->id) {
+                    $tables[] = $table;
+                }
+            }
+        }
+        return $tables;
+    }
+
+    private function __get_boards_from_tables($protocol, $tables) {
+        $dom = str_get_html(file_get_contents(filename_from_url($protocol)));
+        $header_td1 = $dom->find('/html/body/table/tr/td[class="bdcc12"]', 0);
+        $header_tr = $header_td1->parent;
+        $tr = @$header_tr->next_sibling();
+        $boards = array();
+        while ($tr) {
+            $td = $tr->find('td/a', 0);
+            if ($td) {
+                $table = trim($td->innertext);
+                $table = str_replace('&nbsp;', '', $table);
+                $table = (int)$table;
+                if ($table) {
+                    if (in_array($table, $tables) || !$tables) {
+                        // add table rows to specific board record
+                        $boards[] = $tr->outertext;
+                        $boards[] = $tr->next_sibling()->outertext;
+                    }
+                }
+            }
+            $tr = @$tr->next_sibling();
+        }
+        return $boards;
+    }
+
+    public function is_played($row, $link) {
+        if (!$this->__hide) {
+            return TRUE;
+        }
+        $boardNumber = intval(substr(explode('-', $link->href)[1], 0, -4));
+        $tables = $this->__get_tables_for_board($boardNumber);
+        $boardRows = $this->__get_boards_from_tables($link->href, $tables);
+        return Protocol::areBoardsPlayed($boardRows);
+    }
+
+    public function hide_results($row) {
+        $hideColumns = array(0, 1, 2, 3, 4, 6, 7, 8, 9, 10); // columns to hide - all but board number and scores
+        $cells = $row->find('td');
+		$col = -1;
+		foreach ($cells as $cell) {
+			$col++;
+			if (in_array($col, $hideColumns)) {
+				$cell->innertext = '&nbsp;';
+			}
+		}
+    }
+
+    public function output() {
+        foreach ($this->__content->find('tr a.zb[target=popra]') as $link) {
+            $row = $link;
+            while ($row->tag != 'tr') {
+                $row = $row->parent;
+            }
+            if (!$this->is_played($row, $link)) {
+                $this->hide_results($row);
+            }
+        }
+        print $this->__content->outertext;
     }
 
 }
@@ -303,11 +455,14 @@ class BoardDB {
     }
 
     private function __getFilesTimestamps($files = array()) {
-        // dictionary to keep track of PBN modification files
-        return array_combine(
-            $files,
-            array_map('filemtime', $files)
-        );
+        if ($files) {
+            // dictionary to keep track of PBN modification files
+            return array_combine(
+                $files,
+                array_map('filemtime', $files)
+            );
+        }
+        return array();
     }
 
     private function __compileRecordDatabase($files, $dbFile) {
