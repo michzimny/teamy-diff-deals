@@ -253,7 +253,8 @@ class Scoresheet {
         $this->__table = $table;
         $this->__round = $round;
         $this->__content = str_get_dom(file_get_contents($this->get_filename($this->__filename)));
-        $this->__db = (new BoardDB())->getDB();
+        $boardDB = new BoardDB();
+        $this->__db = $boardDB->getDB();
         $this->__hide = $hide;
     }
 
