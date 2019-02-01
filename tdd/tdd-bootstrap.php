@@ -156,12 +156,16 @@ class Protocol {
         $table->find('tr', 0)->class = 'tdd-header'; // marking default header as navigable header for JS
         foreach ($groupedBoards as $boardId => $groupedBoard) {
             if ($boardId === 'default') {
-                if (!$defaultRecordPresent) {
-                    continue;
-                }
                 // there are no tables for default hand record, clear the default table entirely (strip headers, footers etc.)
                 if (!$groupedBoard) {
                     $table->innertext = '';
+                    continue;
+                }
+                if (!$defaultRecordPresent) {
+                    $cells = $table->find('td');
+                    $cells[0]->innertext = '<h4 id="table-0">' . $cells[0]->innertext . '</h4>';
+                    $groupedBoard = $this->__hide_results($groupedBoard);
+                    $table->innertext .= implode('', $groupedBoard);
                     continue;
                 }
                 $innerTable = $table->find('td/table', 0);
