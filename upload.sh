@@ -1,4 +1,6 @@
 #!/bin/bash
 set -e
 set -u
-scp -r *.php .htaccess css sklady pzbs:~/liga/$1/
+echo ""
+echo $1
+scp -r .htaccess css sklady tdd pzbs:~/liga/$1/
