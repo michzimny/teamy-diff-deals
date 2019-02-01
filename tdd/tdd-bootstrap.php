@@ -114,10 +114,10 @@ class Protocol {
         $content = file_get_contents($this->get_filename());
 
         $dom = str_get_html($content);
+        $defaultRecordPresent = TRUE;
         // if there's no hand record ("Don't send boards" or a hollow frame), just passthru the original file
         if (!count($dom->find('h4'))) {
-            echo $content;
-            return;
+            $defaultRecordPresent = FALSE;
         }
         $header_td1 = $dom->find('/html/body/table/tr/td[class="bdcc12"]', 0);
         $header_tr = $header_td1->parent;
@@ -156,6 +156,9 @@ class Protocol {
         $table->find('tr', 0)->class = 'tdd-header'; // marking default header as navigable header for JS
         foreach ($groupedBoards as $boardId => $groupedBoard) {
             if ($boardId === 'default') {
+                if (!$defaultRecordPresent) {
+                    continue;
+                }
                 // there are no tables for default hand record, clear the default table entirely (strip headers, footers etc.)
                 if (!$groupedBoard) {
                     $table->innertext = '';
