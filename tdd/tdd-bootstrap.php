@@ -183,7 +183,8 @@ class Protocol {
                 $endTable = '';
                 foreach ($table->find('tr') as $row) {
                     if ($row->parent == $table) {
-                        if ($row->class == 'tdd-header' || substr($row->find('td')[0]->class, 0, 4) == 'bdcc') {
+                        $cells = $row->find('td');
+                        if ($row->class == 'tdd-header' || substr($cells[0]->class, 0, 4) == 'bdcc') {
                             $startTable .= $row->outertext;
                         } else {
                             $endTable .= $row->outertext;
@@ -252,7 +253,8 @@ class Scoresheet {
         $this->__table = $table;
         $this->__round = $round;
         $this->__content = str_get_dom(file_get_contents($this->get_filename($this->__filename)));
-        $this->__db = (new BoardDB())->getDB();
+        $boardDB = new BoardDB();
+        $this->__db = $boardDB->getDB();
         $this->__hide = $hide;
     }
 
@@ -304,7 +306,8 @@ class Scoresheet {
         if (!$this->__hide) {
             return TRUE;
         }
-        $boardNumber = intval(substr(explode('-', $link->href)[1], 0, -4));
+        $linkParts = explode('-', $link->href);
+        $boardNumber = intval(substr($linkParts[1], 0, -4));
         $tables = $this->__get_tables_for_board($boardNumber);
         $boardRows = $this->__get_boards_from_tables($link->href, $tables);
         return Protocol::areBoardsPlayed($boardRows);
