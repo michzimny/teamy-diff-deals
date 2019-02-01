@@ -1,11 +1,8 @@
-<Files  ~ "\.(pbn)$">
-  Order allow,deny
-  Deny from all
-</Files>
-<Files  ~ "\.(PBN)$">
+<Files  ~ "\.([pP][bB][nN])$">
   Order allow,deny
   Deny from all
 </Files>
 
 RewriteEngine On
-RewriteRule ([a-zA-Z0-9-_]+)(\d)b-(\d+)\.html$ tdd-protocol.php?prefix=$1&round=$2&board=$3
+RewriteRule ([a-zA-Z0-9-_]+)(\d)b-(\d+)\.html$ tdd/tdd-protocol.php?prefix=$1&round=$2&board=$3
+RewriteRule ([a-zA-Z0-9-_]+)(\d+)t(\d+)-(\d+)\.html$ tdd/tdd-scoresheet.php?prefix=$1&round=$2&board=$3
