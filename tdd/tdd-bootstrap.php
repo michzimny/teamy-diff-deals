@@ -100,7 +100,7 @@ class Protocol {
     private function __hide_results($boards) {
         foreach ($boards as &$board) {
             $row = str_get_html($board);
-            $cells = $row->find('td.bdc, td.zeo');
+            $cells = $row->find('td.bdc, td.zeo, td.zno');
             foreach ($cells as $cell) {
                 $cell->innertext = '&nbsp;';
             }
@@ -114,10 +114,10 @@ class Protocol {
         $content = file_get_contents($this->get_filename());
 
         $dom = str_get_html($content);
+        $defaultRecordPresent = TRUE;
         // if there's no hand record ("Don't send boards" or a hollow frame), just passthru the original file
         if (!count($dom->find('h4'))) {
-            echo $content;
-            return;
+            $defaultRecordPresent = FALSE;
         }
         $header_td1 = $dom->find('/html/body/table/tr/td[class="bdcc12"]', 0);
         $header_tr = $header_td1->parent;
@@ -159,6 +159,13 @@ class Protocol {
                 // there are no tables for default hand record, clear the default table entirely (strip headers, footers etc.)
                 if (!$groupedBoard) {
                     $table->innertext = '';
+                    continue;
+                }
+                if (!$defaultRecordPresent) {
+                    $cells = $table->find('td');
+                    $cells[0]->innertext = '<h4 id="table-0">' . $cells[0]->innertext . '</h4>';
+                    $groupedBoard = $this->__hide_results($groupedBoard);
+                    $table->innertext .= implode('', $groupedBoard);
                     continue;
                 }
                 $innerTable = $table->find('td/table', 0);
