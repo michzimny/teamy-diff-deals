@@ -100,7 +100,7 @@ class Protocol {
     private function __hide_results($boards) {
         foreach ($boards as &$board) {
             $row = str_get_html($board);
-            $cells = $row->find('td.bdc, td.zeo');
+            $cells = $row->find('td.bdc, td.zeo, td.zno');
             foreach ($cells as $cell) {
                 $cell->innertext = '&nbsp;';
             }
