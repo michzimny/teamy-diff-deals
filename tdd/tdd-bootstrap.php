@@ -454,6 +454,8 @@ class BoardDB {
         $this->__dbFile = $dbFile;
         if (file_exists($this->__dbFile)) {
             $this->__database = unserialize(file_get_contents($this->__dbFile));
+        } else {
+            $this->__compileRecordDatabase($this->__getRecordFiles(), $this->__dbFile);
         }
         $this->refreshBoardDatabase();
     }
