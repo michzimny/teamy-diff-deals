@@ -71,14 +71,10 @@ class Protocol {
     }
 
     private function __played($boards) {
-        // don't hide results if it's not explicitly enabled
-        if (!$this->__hideResults) {
-            return TRUE;
-        }
-        return self::areBoardsPlayed($boards);
+        return self::areBoardsPlayed($boards, $this->__hideResults);
     }
 
-    public static function areBoardsPlayed($boards) {
+    public static function areBoardsPlayed($boards, $hideResults) {
         // if somehow the default board hand record is not meant to be played on any table, don't reveal it
         if (!$boards) {
             return FALSE;
@@ -91,10 +87,16 @@ class Protocol {
             $contract = trim(str_replace('&nbsp;', '', $dom->find('td[class="bdc"]', 0)->innertext));
             // contract field for arbitral scores starts with 'A' (e.g. 'ARB' or 'AAA')
             if ($score == '' && (!strlen($contract) || $contract[0] != 'A')) {
-                return FALSE;
+                if ($hideResults) {
+                    return FALSE;
+                }
+            } else {
+                if (!$hideResults) {
+                    return TRUE;
+                }
             }
         }
-        return TRUE;
+        return $hideResults;
     }
 
     private function __hide_results($boards) {
@@ -317,7 +319,7 @@ class Scoresheet {
         $boardNumber = intval(substr($linkParts[1], 0, -4));
         $tables = $this->__get_tables_for_board($boardNumber);
         $boardRows = $this->__get_boards_from_tables($link->href, $tables);
-        return Protocol::areBoardsPlayed($boardRows);
+        return Protocol::areBoardsPlayed($boardRows, TRUE);
     }
 
     public function hide_results($row) {
