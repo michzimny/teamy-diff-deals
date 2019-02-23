@@ -6,7 +6,7 @@ function filename_from_url($url) {
     return '..' . DIRECTORY_SEPARATOR . $url;
 }
 
-const PREFIXES_FILE = '.ukrywacz';
+define('PREFIXES_FILE', '.ukrywacz');
 
 function get_hide_prefixes() {
     return file_exists(PREFIXES_FILE) ? array_filter(
@@ -24,7 +24,7 @@ class Protocol {
         $this->round = $round;
         $this->board = $board;
         if (file_exists('translations.json')) {
-            static::$translations = json_decode(file_get_contents('translations.json'), TRUE);
+            self::$translations = json_decode(file_get_contents('translations.json'), TRUE);
         }
         $this->deals_by_tables = array();
         if (!file_exists($this->get_filename())) {
@@ -33,8 +33,8 @@ class Protocol {
     }
 
     static function __($string) {
-        if (isset(static::$translations[$string])) {
-            return static::$translations[$string];
+        if (isset(self::$translations[$string])) {
+            return self::$translations[$string];
         }
         return $string;
     }
@@ -177,7 +177,7 @@ class Protocol {
                 // replace board number header to make it consistent with other protocols
                 // and mark it as hyperlink hash target
                 if (preg_match('/#(\d+)/', $firstRow->find('h4', 0)->innertext, $dealNumber)) {
-                    $firstRow->innertext = '<td><a href="#table-0"><h4 id="table-0">' . static::__("Rozdanie") . ' ' . $dealNumber[1] . '</h4></a></td>';
+                    $firstRow->innertext = '<td><a href="#table-0"><h4 id="table-0">' . self::__("Rozdanie") . ' ' . $dealNumber[1] . '</h4></a></td>';
                 }
                 $played = $this->__played($groupedBoard);
                 // remove all other rows (actual layout and DD data) if the default board has not been played on all tables
@@ -212,12 +212,12 @@ class Protocol {
                     // compile header with tables numbers
                     $insert = '<a href="#table-' . $tables[0] . '"><h4 id="table-' . $tables[0] . '">';
                     if (count($tables) <= 5) {
-                        $insert .= static::__("Stół") . ' ' . implode(', ', $tables);
+                        $insert .= self::__("Stół") . ' ' . implode(', ', $tables);
                     } else {
-                        $insert .= count($tables) . ' ' . static::__("stołów");
+                        $insert .= count($tables) . ' ' . self::__("stołów");
                     }
                     $insert .= ' &ndash; ';
-                    $insert .= static::__("Rozdanie") . ' ' . $deal->deal_num . '</h4></a>';
+                    $insert .= self::__("Rozdanie") . ' ' . $deal->deal_num . '</h4></a>';
                     // if the board has been played on all tables
                     if ($this->__played($groupedBoard)) {
                         $insert .= $deal->html();
