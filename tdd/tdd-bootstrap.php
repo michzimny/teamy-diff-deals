@@ -479,7 +479,7 @@ class BoardDB {
         return array();
     }
 
-    private function __compileRecordDatabase($files, $dbFile) {
+    private function __compileRecordDatabase($files) {
         $this->__database = array();
         foreach ($files as $filename) {
             $filename = basename($filename);
