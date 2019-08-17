@@ -163,10 +163,13 @@ class Protocol {
                     $table->innertext = '';
                     continue;
                 }
+                $played = $this->__played($groupedBoard);
                 if (!$defaultRecordPresent) {
                     $cells = $table->find('td');
                     $cells[0]->innertext = '<h4 id="table-0">' . $cells[0]->innertext . '</h4>';
-                    $groupedBoard = $this->__hide_results($groupedBoard);
+                    if (!$played) {
+                        $groupedBoard = $this->__hide_results($groupedBoard);
+                    }
                     $table->innertext .= implode('', $groupedBoard);
                     continue;
                 }
@@ -179,7 +182,6 @@ class Protocol {
                 if (preg_match('/#(\d+)/', $firstRow->find('h4', 0)->innertext, $dealNumber)) {
                     $firstRow->innertext = '<td><a href="#table-0"><h4 id="table-0">' . self::__("Rozdanie") . ' ' . $dealNumber[1] . '</h4></a></td>';
                 }
-                $played = $this->__played($groupedBoard);
                 // remove all other rows (actual layout and DD data) if the default board has not been played on all tables
                 if (!$played) {
                     foreach ($rows as $row) {
