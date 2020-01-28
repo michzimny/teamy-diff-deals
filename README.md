@@ -11,6 +11,7 @@ W katalogu z plikami html na serwerze należy umieścić .htaccess oraz katalog 
 Reguły w .htaccess zapewniają, że:
  * zapytania do plików HTML z protokołami są przekierowywane do tdd-protocol.php,
  * zapytania do plików HTML z protokołami są przekierowywane do tdd-scoresheet.php
+
 Skrypty te wykonują odpowiednie operacje.
 
 Skrypt domyślnie obsługuje napisy w języku angielskim. Dla turniejów po polsku należy skasować z katalogu tdd plik `translations.json`.
