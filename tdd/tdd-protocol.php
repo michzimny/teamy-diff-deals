@@ -3,7 +3,7 @@
 require_once('tdd-bootstrap.php');
 
 // parsing URI parts from full request string
-$uri = explode('b-', basename($_SERVER['REQUEST_URI']));
+$uri = explode('b-', basename(strtok($_SERVER['REQUEST_URI'],'?')));
 // if "b-" is not found in the string, it's a direct call, all mod_rewrite requests do have it
 if (count($uri) < 2) {
     die('This script cannot be called directly!');
