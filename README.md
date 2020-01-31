@@ -63,6 +63,8 @@ lub dwóch albo trzech osobnych plików dla poszczególnych zakresów stołów.
 
 ## Ukrywacz wyników
 
+Ukrywacz wyników działa w ten sposób, że ukrywa rozkład i zapisy danego rozdania, dopóki oba stoły meczu go nie rozegrają i nie wprowadzą wyniku.
+
 Ukrywacz zostaje włączony dla wszystkich turniejów, których prefiksy są obecne w pliku `tdd/.ukrywacz`.
 
 Ukrywacz działa również dla prefiksów, dla których nie definiuje się różnych rozkładów dla różnych stołów - pod warunkiem umieszczenia ich w pliku `tdd/.ukrywacz`.
