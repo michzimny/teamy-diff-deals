@@ -1,6 +1,6 @@
 <?php
 
-$html_filename = basename($_SERVER['REQUEST_URI']);
+$html_filename = basename(strtok($_SERVER['REQUEST_URI'],'?'));
 // if ".html" is not found at the end of the string, it's a direct call, all mod_rewrite requests do have it
 if (substr($html_filename, -5) !== '.html') {
     die('This script cannot be called directly!');
