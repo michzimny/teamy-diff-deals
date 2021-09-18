@@ -86,7 +86,7 @@ class Protocol {
             $score = trim(str_replace('&nbsp;', '', $dom->find('td', 5 + $isFirstRow)->innertext));
             $contract = trim(str_replace('&nbsp;', '', $dom->find('td[class="bdc"]', 0)->innertext));
             // contract field for arbitral scores starts with 'A' (e.g. 'ARB' or 'AAA')
-            if ($score == '' && (!strlen($contract) || $contract[0] != 'A')) {
+            if ($score == '' && (!strlen($contract) || strtoupper($contract[0]) != 'A')) {
                 if ($hideResults) {
                     return FALSE;
                 }
