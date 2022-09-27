@@ -2,7 +2,7 @@
 
 Program umożliwia wyświetlenie w protokole JFR Teamy na stronie wielu rozkładów rozdań, tj. innego rozkładu dla każdego stołu (lub tylko dla wybranych stołów).
 
-Program posiada również funkcjonalność ukrywania rozkładów i zapisów rozdania, jeśli wszystkie zapisy dla danego rozkładu nie widnieją jeszcze w protokole.
+Program posiada również funkcjonalność ukrywania rozkładów i zapisów rozdania, jeśli wszystkie zapisy dla danego rozkładu nie widnieją jeszcze w protokole - lub do określonego czasu.
 Zapisy ukrywane są również w kontrolkach.
 
 ## Instalacja
@@ -68,3 +68,20 @@ Ukrywacz zostaje włączony dla wszystkich turniejów, których prefiksy są obe
 Ukrywacz działa również dla prefiksów, dla których nie definiuje się różnych rozkładów dla różnych stołów - pod warunkiem umieszczenia ich w pliku `tdd/.ukrywacz`.
 
 Ukrywacz **nie działa** dla żadnego prefiksu nieobecnego w `tdd/.ukrywacz` - nawet jeśli dla prefiksu zdefiniowano różne rozkłady przy różnych stołach.
+
+Alternatywnie do określenia prefiksów w `tdd/.ukrywacz`, można utworzyć konfigurację czasowego ukrywania rozdań, w pliku `tdd/.ukrywacz-times.json`.
+Jest to plik JSON, formatu:
+
+```
+{
+    "PREFIX": {
+        "NR_RUNDY": {
+            "NR_ROZDANIA_1": ZNACZNIK_CZASU_LUB_DATA,
+            "NR_ROZDANIA_2": ZNACZNIK_CZASU_LUB_DATA,
+            "NR_ROZDANIA_3": ZNACZNIK_CZASU_LUB_DATA
+        }
+    }
+}
+```
+
+Rozdania zostaną wówczas odkryte nie wcześniej niż o określonej godzinie w określonej dacie. Jest to ustawienie niezależne od pliku `tdd/.ukrywacz`, to jest jeśli prefiks jest zarówno w pliku JSON, jak i w pliku `tdd/.ukrywacz`, rozdanie zostanie odkryte dopiero po zagraniu na wszystkich stołach, a jeśli jest wyłącznie w pliku JSON, zostanie odkryte o określonej godzinie niezależnie od tego, czy zostało już zagrane.

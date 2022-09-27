@@ -13,10 +13,10 @@ $board = (int)(array_pop($uri));
 // the rest is compiled back to separate prefix from round later on
 $roundPrefix = implode('b-', $uri);
 
-$hidePrefixes = get_hide_prefixes();
+$database = new BoardDB();
+$hidePrefixes = array_merge(get_hide_prefixes(), array_keys($database->getTimedDB()));
 
 try {
-    $database = new BoardDB();
     // GET parameters pre-parsed by mod_rewrite are used for HTML fallback
     // in case {$prefix}{$round} combo is not matched against board DB
     $protocol = new Protocol($_GET['prefix'], $_GET['round'], $board);
