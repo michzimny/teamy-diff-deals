@@ -10,7 +10,7 @@ require_once('tdd-bootstrap.php');
 
 try {
     $database = new BoardDB();
-    $hidePrefixes = get_hide_prefixes();
+    $hidePrefixes = array_merge(get_hide_prefixes(), array_keys($database->getTimedDB()));
     $prefixes = array_merge(
         array_keys($database->getDB()),
         $hidePrefixes
