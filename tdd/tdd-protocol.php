@@ -14,7 +14,9 @@ $board = (int)(array_pop($uri));
 $roundPrefix = implode('b-', $uri);
 
 $database = new BoardDB();
-$hidePrefixes = array_merge(get_hide_prefixes(), array_keys($database->getTimedDB()));
+$nonTimedPrefixes = get_hide_prefixes();
+$timedPrefixes = array_keys($database->getTimedDB());
+$hidePrefixes = array_merge($nonTimedPrefixes, $timedPrefixes);
 
 try {
     // GET parameters pre-parsed by mod_rewrite are used for HTML fallback
@@ -25,7 +27,7 @@ try {
         foreach ($rounds as $round => $boards) {
             // matching each prefix and round in DB to URI
             if (($prefix . $round === $roundPrefix)) {
-                $protocol->set_hide_results(in_array($prefix, $hidePrefixes));
+                $protocol->set_hide_results(in_array($prefix, $nonTimedPrefixes));
                 if (isset($boards[$board])) {
                     foreach($boards[$board] as $table => $deal) {
                         $protocol->set_deal($table, $deal);
@@ -36,14 +38,17 @@ try {
             }
         }
     }
+    // Maybe prefix is just in result hide mode, without diff-deals
     foreach ($hidePrefixes as $prefix) {
         if (substr($roundPrefix, 0, strlen($prefix)) === $prefix) {
-            $protocol->set_hide_results(TRUE);
+            // If it's in non-timed mode, force hide_results
+            // Otherwise, timed hide will kick in
+            $protocol->set_hide_results(in_array($prefix, $nonTimedPrefixes));
             echo $protocol->output();
             exit(0);
         }
     }
-    // here's the fallback
+    // And here's the fallback if it's just a regular protocol
     readfile($html_filename);
 } catch (Exception $e) {
     header('HTTP/1.0 404 Not Found');
