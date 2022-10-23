@@ -7,6 +7,7 @@ function filename_from_url($url) {
 }
 
 define('PREFIXES_FILE', '.ukrywacz');
+define('TIMED_BOARDS_FILE', '.ukrywacz-times.json');
 
 function get_hide_prefixes() {
     return file_exists(PREFIXES_FILE) ? array_filter(
@@ -23,6 +24,7 @@ class Protocol {
         $this->prefix = $prefix;
         $this->round = $round;
         $this->board = $board;
+        $this->__boardDB = new BoardDB();
         if (file_exists('translations.json')) {
             self::$translations = json_decode(file_get_contents('translations.json'), TRUE);
         }
@@ -71,6 +73,9 @@ class Protocol {
     }
 
     private function __played($boards) {
+        if ($this->__boardDB->hideTimedBoards($this->prefix, $this->round, $this->board)) {
+            return FALSE;
+        }
         return self::areBoardsPlayed($boards, $this->__hideResults);
     }
 
@@ -86,7 +91,7 @@ class Protocol {
             $score = trim(str_replace('&nbsp;', '', $dom->find('td', 5 + $isFirstRow)->innertext));
             $contract = trim(str_replace('&nbsp;', '', $dom->find('td[class="bdc"]', 0)->innertext));
             // contract field for arbitral scores starts with 'A' (e.g. 'ARB' or 'AAA')
-            if ($score == '' && (!strlen($contract) || $contract[0] != 'A')) {
+            if ($score == '' && (!strlen($contract) || strtoupper($contract[0]) != 'A')) {
                 if ($hideResults) {
                     return FALSE;
                 }
@@ -264,8 +269,8 @@ class Scoresheet {
         $this->__table = $table;
         $this->__round = $round;
         $this->__content = str_get_dom(file_get_contents($this->get_filename($this->__filename)));
-        $boardDB = new BoardDB();
-        $this->__db = $boardDB->getDB();
+        $this->__boardDB = new BoardDB();
+        $this->__db = $this->__boardDB->getDB();
         $this->__hide = $hide;
     }
 
@@ -314,11 +319,14 @@ class Scoresheet {
     }
 
     public function is_played($row, $link) {
+        $linkParts = explode('-', $link->href);
+        $boardNumber = intval(substr($linkParts[1], 0, -4));
+        if ($this->__boardDB->hideTimedBoards($this->__prefix, $this->__round, $boardNumber)) {
+            return FALSE;
+        }
         if (!$this->__hide) {
             return TRUE;
         }
-        $linkParts = explode('-', $link->href);
-        $boardNumber = intval(substr($linkParts[1], 0, -4));
         $tables = $this->__get_tables_for_board($boardNumber);
         $boardRows = $this->__get_boards_from_tables($link->href, $tables);
         return Protocol::areBoardsPlayed($boardRows, TRUE);
@@ -460,10 +468,15 @@ class BoardDB {
             $this->__compileRecordDatabase($this->__getRecordFiles(), $this->__dbFile);
         }
         $this->refreshBoardDatabase();
+        $this->_timedBoards = $this->_getTimedBoards();
     }
 
     public function getDB() {
         return $this->__database;
+    }
+
+    public function getTimedDB() {
+        return $this->_timedBoards;
     }
 
     private function __getRecordFiles($directory = '.') {
@@ -567,5 +580,30 @@ class BoardDB {
             $this->__compileRecordDatabase($recordFiles, $this->__dbFile);
             file_put_contents($this->__timestampFile, json_encode($timestamps));
         }
+    }
+
+    private function _getTimedBoards() {
+        if (file_exists(TIMED_BOARDS_FILE)) {
+            $timedDB = json_decode(file_get_contents(TIMED_BOARDS_FILE), TRUE);
+            if ($timedDB) {
+                return $timedDB;
+            }
+        }
+        return array();
+    }
+
+    public function hideTimedBoards($prefix, $round, $board) {
+        if (isset($this->_timedBoards[$prefix])) {
+            if (isset($this->_timedBoards[$prefix][$round])) {
+                if (isset($this->_timedBoards[$prefix][$round][$board])) {
+                    $boardTime = $this->_timedBoards[$prefix][$round][$board];
+                    if (!is_int($boardTime)) {
+                        $boardTime = strtotime($boardTime);
+                    }
+                    return time() < $boardTime;
+                }
+            }
+        }
+        return FALSE;
     }
 }

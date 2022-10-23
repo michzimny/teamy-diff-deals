@@ -87,7 +87,12 @@ var TDD = {
                     if ($(hash).length > 0) {
                         location.replace(hash);
                     } else {
-                        location.replace('#table-0');
+                        var detected = TDD.detectTable(hash);
+                        if (detected && detected.attr('id')) {
+                            location.replace('#' + detected.attr('id'));
+                        } else {
+                            location.replace('#table-0');
+                        }
                     }
                 } else {
                     $('h4[id]').each(function() { TDD.highlightTable($(this)); });
