@@ -9,23 +9,16 @@ if (substr($html_filename, -5) !== '.html') {
 require_once('tdd-bootstrap.php');
 
 try {
-    $database = new BoardDB();
-    $nonTimedPrefixes = get_hide_prefixes();
-    $hidePrefixes = array_merge($nonTimedPrefixes, array_keys($database->getTimedDB()));
-    $prefixes = array_merge(
-        array_keys($database->getDB()),
-        $hidePrefixes
-    );
-    foreach ($prefixes as $prefix) {
-        $uri_match = array();
-        if (preg_match('/^(' . $prefix . ')(\d+)t(\d+)-(\d+)\.html$/', $html_filename, $uri_match)) {
-            $round = intval($uri_match[2]);
-            $table = intval($uri_match[3]);
-            $segment = intval($uri_match[4]);
-            $scoresheet = new Scoresheet($html_filename, $prefix, $table, $round, in_array($prefix, $nonTimedPrefixes));
-            $scoresheet->output();
-            exit(0);
-        }
+    $url_parts = detect_url_parts($html_filename);
+    if ($url_parts) {
+        $prefix = $url_parts[0];
+        $round = $url_parts[1];
+        $table = $url_parts[2];
+        $segment = $url_parts[3];
+        $nonTimed = $url_parts[4];
+        $scoresheet = new Scoresheet($html_filename, $prefix, $table, $round, $nonTimed);
+        $scoresheet->output();
+        exit(0);
     }
     $html_filename = '..' . DIRECTORY_SEPARATOR . $html_filename;
     if (!file_exists($html_filename)) {

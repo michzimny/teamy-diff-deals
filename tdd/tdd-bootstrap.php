@@ -15,6 +15,28 @@ function get_hide_prefixes() {
     ) : array();
 }
 
+function detect_url_parts($html_filename) {
+    $database = new BoardDB();
+    $nonTimedPrefixes = get_hide_prefixes();
+    $hidePrefixes = array_merge($nonTimedPrefixes, array_keys($database->getTimedDB()));
+    $prefixes = array_merge(
+        array_keys($database->getDB()),
+        $hidePrefixes
+    );
+    foreach ($prefixes as $prefix) {
+        $uri_match = array();
+        if (preg_match('/^(' . $prefix . ')(\d+)t(\d+)-(\d+)\.html$/', $html_filename, $uri_match)) {
+            $round = intval($uri_match[2]);
+            $table = intval($uri_match[3]);
+            $segment = intval($uri_match[4]);
+            $nonTimed = in_array($prefix, $nonTimedPrefixes);
+            return array(
+                $prefix, $round, $table, $segment, $nonTimed
+            );
+        }
+    }
+}
+
 class Protocol {
 
     private static $translations = array();
