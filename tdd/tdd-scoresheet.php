@@ -9,7 +9,7 @@ if (substr($html_filename, -5) !== '.html') {
 require_once('tdd-bootstrap.php');
 
 try {
-    $url_parts = detect_url_parts($html_filename);
+    $url_parts = detect_scoresheet_url_parts($html_filename);
     if ($url_parts) {
         $prefix = $url_parts[0];
         $round = $url_parts[1];

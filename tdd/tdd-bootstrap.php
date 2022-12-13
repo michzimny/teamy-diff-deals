@@ -15,7 +15,7 @@ function get_hide_prefixes() {
     ) : array();
 }
 
-function detect_url_parts($html_filename) {
+function get_prefixes() {
     $database = new BoardDB();
     $nonTimedPrefixes = get_hide_prefixes();
     $hidePrefixes = array_merge($nonTimedPrefixes, array_keys($database->getTimedDB()));
@@ -23,6 +23,28 @@ function detect_url_parts($html_filename) {
         array_keys($database->getDB()),
         $hidePrefixes
     );
+    return $prefixes;
+}
+
+function detect_protocol_url_parts($html_filename) {
+    $prefixes = get_prefixes();
+    $nonTimedPrefixes = get_hide_prefixes();
+    foreach ($prefixes as $prefix) {
+        $uri_match = array();
+        if (preg_match('/^(' . $prefix . ')(\d+)b-(\d+)\.html$/', $html_filename, $uri_match)) {
+            $round = intval($uri_match[2]);
+            $board = intval($uri_match[3]);
+            $nonTimed = in_array($prefix, $nonTimedPrefixes);
+            return array(
+                $prefix, $round, $board, $nonTimed
+            );
+        }
+    }
+}
+
+function detect_scoresheet_url_parts($html_filename) {
+    $prefixes = get_prefixes();
+    $nonTimedPrefixes = get_hide_prefixes();
     foreach ($prefixes as $prefix) {
         $uri_match = array();
         if (preg_match('/^(' . $prefix . ')(\d+)t(\d+)-(\d+)\.html$/', $html_filename, $uri_match)) {
