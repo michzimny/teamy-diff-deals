@@ -89,6 +89,19 @@ class Protocol {
         return filename_from_url($this->prefix . $this->round . 'b-' . $this->board . '.html');
     }
 
+    function set_deals() {
+        $boardDB = $this->__boardDB->getDB();
+        if (isset($boardDB[$this->prefix])) {
+            if (isset($boardDB[$this->prefix][$this->round])) {
+                if (isset($boardDB[$this->prefix][$this->round][$this->board])) {
+                    foreach($boardDB[$this->prefix][$this->round][$this->board] as $table => $deal) {
+                        $this->set_deal($table, $deal);
+                    }
+                }
+            }
+        }
+    }
+
     function set_deal($table, $deal) {
         $this->deals_by_tables[$table] = $deal;
     }
