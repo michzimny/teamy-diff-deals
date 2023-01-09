@@ -590,7 +590,7 @@ class BoardDB {
                 $boardNumber = 1;
                 $firstBoardNumber = -1;
                 foreach ($chunks as $chunk) {
-                    $chunk = trim($chunk);
+                    $chunk = trim(preg_replace('/^' . "\xEF\xBB\xBF" . '/', '', $chunk));
                     // PBN header (first chunk of the file) is ignored
                     if (strpos($chunk, '% PBN') > -1) {
                         continue;
